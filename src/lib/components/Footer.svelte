@@ -19,9 +19,6 @@
         <h6 class="footer-title">Services</h6>
         <ul class="menu menu-nav">
           <li>
-            <a href="/home">Home</a>
-          </li>
-          <li>
             <a href="/conventions">Conventions</a>
           </li>
           <li>
