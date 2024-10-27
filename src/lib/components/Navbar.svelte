@@ -23,7 +23,7 @@
       {/if}
     </div>
     <div class="navbar-center">
-      <a class="btn btn-ghost text-xl bg-base">Submission is possible</a>
+      <a class="btn btn-ghost text-xl bg-base">Submission is Possible</a>
     </div>
     <div class="navbar-end">
         <LoginButton />
