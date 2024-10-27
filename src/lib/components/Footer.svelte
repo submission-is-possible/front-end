@@ -1,41 +1,45 @@
-<script>
+<script lang="ts">
   import logo from '/logo.png';
+
+  let isLoggedin: Boolean = false;
 </script>
 
 <div class="flex flex-col">
   <footer class="footer bg-neutral text-neutral-content p-10">
     <aside>
-      <img src={logo} alt="Logo" class="h-8 w-24 h-24" />
+      <img src={logo} alt="Logo" class="h-24" />
       <p>
         <b>Submission is Possible</b> Ltd.
         <br />
         Managing conventions since 2024
       </p>
     </aside>
-    <nav>
-      <h6 class="footer-title">Services</h6>
-      <ul class="menu menu-nav">
-        <li>
-          <a href="/">Home</a>
-        </li>
-        <li>
-          <a href="/conventions">Conventions</a>
-        </li>
-        <li>
-          <a href="/reviews">Reviews</a>
-        </li>
-        <li>
-          <a href="/submissions">Submissions</a>
-        </li>
-    </nav>
+    {#if isLoggedin}
+      <nav>
+        <h6 class="footer-title">Services</h6>
+        <ul class="menu menu-nav">
+          <li>
+            <a href="/home">Home</a>
+          </li>
+          <li>
+            <a href="/conventions">Conventions</a>
+          </li>
+          <li>
+            <a href="/reviews">Reviews</a>
+          </li>
+          <li>
+            <a href="/submissions">Submissions</a>
+          </li>
+      </nav>
+    {/if}
     <nav>
       <h6 class="footer-title">Pages</h6>
       <ul class="menu menu-nav">
         <li>
-          <a href="/">About us</a>
+          <a href="/about-us">About us</a>
         </li>
         <li>
-          <a href="/conventions">Contacts</a>
+          <a href="/contacts">Contacts</a>
         </li>
     </nav>
   </footer>
