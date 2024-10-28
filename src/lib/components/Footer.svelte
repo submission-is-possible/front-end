@@ -19,7 +19,7 @@
         <h6 class="footer-title">Services</h6>
         <ul class="menu menu-nav">
           <li>
-            <a href="/conventions">Conventions</a>
+            <a href="/conference">Conference</a>
           </li>
           <li>
             <a href="/reviews">Reviews</a>
