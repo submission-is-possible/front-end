@@ -15,15 +15,14 @@
 
       {#if isLoggedin}
         <ul class="menu menu-horizontal px-1">
-          <li><a>Home</a></li>
-          <li><a>Conventions</a></li>
-          <li><a>Reviews</a></li>
-          <li><a>Submissions</a></li>
+          <li><a href="/conventions">Conventions</a></li>
+          <li><a href="/reviews">Reviews</a></li>
+          <li><a href="/submissions">Submissions</a></li>
         </ul>
       {/if}
     </div>
     <div class="navbar-center">
-      <a class="btn btn-ghost text-xl bg-base">Submission is possible</a>
+      <a href="/" class="btn btn-ghost text-xl bg-base">Submission is Possible</a>
     </div>
     <div class="navbar-end">
         <LoginButton />
