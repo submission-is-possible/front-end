@@ -1,6 +1,6 @@
 <script lang="ts">
   import LoginButton from './LoginButton.svelte';
-  import Logo from '/logo.png';
+  import Logo from '$lib/images/logo.png'
 
   // This component should be listen to a user service or something similar that
   //  contains the user state and set isLoggedin variable accordingly
