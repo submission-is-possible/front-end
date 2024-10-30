@@ -1,6 +1,6 @@
 <script lang="ts">
   import LoginButton from './LoginButton.svelte';
-  import Logo from '/logo.png';
+  import Logo from '$lib/images/logo.png'
 
   // This component should be listen to a user service or something similar that
   //  contains the user state and set isLoggedin variable accordingly
@@ -15,7 +15,7 @@
 
       {#if isLoggedin}
         <ul class="menu menu-horizontal px-1">
-          <li><a href="/conventions">Conventions</a></li>
+          <li><a href="/conference">Conference</a></li>
           <li><a href="/reviews">Reviews</a></li>
           <li><a href="/submissions">Submissions</a></li>
         </ul>

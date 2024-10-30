@@ -1,5 +1,5 @@
 <script lang="ts">
-  import logo from '/logo.png';
+  import Logo from '$lib/images/logo.png'
 
   let isLoggedin: Boolean = false;
 </script>
@@ -7,7 +7,7 @@
 <div class="flex flex-col">
   <footer class="footer bg-neutral text-neutral-content p-10">
     <aside>
-      <img src={logo} alt="Logo" class="h-24" />
+      <img src={Logo} alt="Logo" class="h-24" />
       <p>
         <b>Submission is Possible</b> Ltd.
         <br />
@@ -19,7 +19,7 @@
         <h6 class="footer-title">Services</h6>
         <ul class="menu menu-nav">
           <li>
-            <a href="/conventions">Conventions</a>
+            <a href="/conference">Conference</a>
           </li>
           <li>
             <a href="/reviews">Reviews</a>
@@ -27,6 +27,7 @@
           <li>
             <a href="/submissions">Submissions</a>
           </li>
+        </ul>
       </nav>
     {/if}
     <nav>
@@ -38,6 +39,7 @@
         <li>
           <a href="/contacts">Contacts</a>
         </li>
+      </ul>
     </nav>
   </footer>
   
