@@ -9,13 +9,13 @@
   <div class="flex flex-col flex-grow"> <!-- Added wrapper div -->
     <Navbar />
     <main class="flex flex-grow">
-      <div class="w-1/3 p-4"></div>
-      <div class="w-2/4 p-4">
+      <div class="w-1/5 p-4"></div>
+      <div class="w-3/5 p-4">
         <div class="container px-4 pb-20">
           <slot />
         </div>
       </div>
-      <div class="w-1/3 p-4 flex flex-col justify-between">
+      <div class="w-1/5 p-4 flex flex-col justify-between">
         <div></div>
         <div class="flex justify-end">
           <CreateConferenceButton />
