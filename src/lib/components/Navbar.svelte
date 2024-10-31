@@ -10,6 +10,7 @@
 
 <div class="navbar bg-base-300 shadow-xl">
     <div class="navbar-start">
+
       <!-- Company logo -->
       <img src={Logo} alt="Company Logo" class="w-10 h-10" />
 
@@ -22,7 +23,7 @@
       {/if}
     </div>
     <div class="navbar-center">
-      <a href="/" class="btn btn-ghost text-xl bg-base">Submission is Possible</a>
+      <a href="/" class="btn btn-ghost text-xl bg-base">Submission is Possible </a>
     </div>
     <div class="navbar-end">
         <LoginButton />
