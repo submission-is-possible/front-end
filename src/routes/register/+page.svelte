@@ -85,10 +85,10 @@
   }
 </script>
 
-<div class="min-h-screen hero bg-base-200">
+<div class="min-h-screen hero pt-4">
   <div class="hero-content flex-col">
     <div class="text-center">
-      <h1 class="text-5xl font-bold">Sign Up</h1>
+      <h1 class="text-2xl font-bold">Sign Up</h1>
       <p class="py-6">Do you have an account? 
         <a href="/login" class="link link-primary">Log In</a>
       </p>
