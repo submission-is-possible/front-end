@@ -56,7 +56,7 @@
     if (!validateForm()) return;
 
     try {
-      const response = await fetch('http://localhost:8000/create_user', {
+      const response = await fetch('http://localhost:8000/users/create/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

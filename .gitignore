@@ -1,4 +1,7 @@
 node_modules
+.idea/
+.vscode/
+.svelte-kit/
 
 # Output
 .output

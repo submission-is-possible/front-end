@@ -1,29 +1,46 @@
 <script lang="ts">
-    import { enhance } from '$app/forms';
-    import type { SubmitFunction } from '@sveltejs/kit';
 
-    let loading = false;
+interface FormData {
+  error: string;
+  email: string;
+  password: string;
+}
 
-    // Inizializza l'oggetto form
-    let form = {
-        error: '',
-        email: '',
-        password: ''
-    };
+let form: FormData = {
+  error: '',
+  email: '',
+  password: ''
+};
+let loading = false;
 
-    const handleSubmit: SubmitFunction = () => {
-        loading = true;
-        return async ({ update, result }) => {
-            loading = false;
-            
-            console.log(result); // Aggiungi questo log per vedere la struttura di `result`
-            if (result.type === 'failure') {
-                form.error = 'Errore durante il login. Riprova.';
-            } else {
-                await update();
-            }
-        };
-    };
+async function handleSubmit(event: SubmitEvent): Promise<void> {
+    loading = true;
+    
+    try {
+        const response = await fetch('http://localhost:8000/users/login/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                email: form.email,
+                password: form.password
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            window.location.href = '/';
+        } else {
+            form.error = data.error || 'Error during the login. Retry.';
+        }
+    } catch (error) {
+        form.error = 'Server connection error. Retry.';
+    } finally {
+        loading = false;
+    }
+}
 </script>
   
   <div class="hero-content flex-col">
@@ -38,15 +55,13 @@
         
         <form 
           method="POST" 
-          use:enhance={handleSubmit}
+          on:submit|preventDefault={handleSubmit}
           class="space-y-4"
         >
         {#if form?.error}
             <div class="alert alert-error shadow-lg rounded-2xl">
                 <div>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                    
                     <span>{form.error}</span>
                 </div>
             </div>
@@ -60,9 +75,9 @@
               type="email"
               id="login-email"
               name="email"
-              value={form?.email ?? ''}
+              bind:value={form.email}
               class="input input-bordered w-full rounded-2xl"
-              class:input-error={form?.error}
+              class:input-error={form.error}
               placeholder="Enter your email"
               required
             />
@@ -76,6 +91,7 @@
               type="password"
               id="login-password"
               name="password"
+              bind:value={form.password}
               class="input input-bordered w-full rounded-2xl"
               class:input-error={form?.error}
               placeholder="Enter your password"
