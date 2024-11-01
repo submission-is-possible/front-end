@@ -85,7 +85,6 @@
   }
 </script>
 
-<div class="min-h-screen hero bg-base-200">
   <div class="hero-content flex-col">
     <div class="text-center">
       <h1 class="text-5xl font-bold">Sign Up</h1>
@@ -93,9 +92,9 @@
         <a href="/login" class="link link-primary">Log In</a>
       </p>
     </div>
-    
-    <div class="card flex-shrink-0 w-full max-w-sm shadow-2xl bg-base-100">
-      <div class="card-body">
+
+    <div class="card w-1/2 shadow-2xl bg-base-100">
+      <div class="card-body flex items-center">
         <form on:submit|preventDefault={handleSubmit}>
           <div class="form-control">
             <label class="label" for="firstName">
@@ -107,46 +106,46 @@
               placeholder="Mario"
               class="input input-bordered"
               bind:value={formData.firstName}
-            />
-            {#if errors.firstName}
+              />
+              {#if errors.firstName}
               <label class="label">
                 <span class="label-text-alt text-error">{errors.firstName}</span>
               </label>
             {/if}
           </div>
-
+          
           <div class="form-control">
             <label class="label" for="lastName">
               <span class="label-text">Surname</span>
             </label>
             <input
-              type="text"
-              id="lastName"
-              placeholder="Rossi"
-              class="input input-bordered"
-              bind:value={formData.lastName}
+            type="text"
+            id="lastName"
+            placeholder="Rossi"
+            class="input input-bordered"
+            bind:value={formData.lastName}
             />
             {#if errors.lastName}
-              <label class="label">
-                <span class="label-text-alt text-error">{errors.lastName}</span>
-              </label>
+            <label class="label">
+              <span class="label-text-alt text-error">{errors.lastName}</span>
+            </label>
             {/if}
           </div>
-
+          
           <div class="form-control">
             <label class="label" for="email">
               <span class="label-text">Email</span>
             </label>
             <input
-              type="email"
-              id="email"
-              placeholder="mario.rossi@esempio.com"
-              class="input input-bordered"
-              bind:value={formData.email}
+            type="email"
+            id="email"
+            placeholder="mario.rossi@esempio.com"
+            class="input input-bordered"
+            bind:value={formData.email}
             />
             {#if errors.email}
-              <label class="label">
-                <span class="label-text-alt text-error">{errors.email}</span>
+            <label class="label">
+              <span class="label-text-alt text-error">{errors.email}</span>
               </label>
             {/if}
           </div>
@@ -156,51 +155,51 @@
               <span class="label-text">Password</span>
             </label>
             <input
-              type="password"
-              id="password"
-              placeholder="********"
-              class="input input-bordered"
-              bind:value={formData.password}
+            type="password"
+            id="password"
+            placeholder="********"
+            class="input input-bordered"
+            bind:value={formData.password}
             />
             {#if errors.password}
-              <label class="label">
-                <span class="label-text-alt text-error">{errors.password}</span>
-              </label>
+            <label class="label">
+              <span class="label-text-alt text-error">{errors.password}</span>
+            </label>
             {/if}
           </div>
-
+          
           <div class="form-control">
             <label class="label" for="confirmPassword">
               <span class="label-text">Confirm Password</span>
             </label>
             <input
-              type="password"
-              id="confirmPassword"
-              placeholder="********"
-              class="input input-bordered"
-              bind:value={formData.confirmPassword}
+            type="password"
+            id="confirmPassword"
+            placeholder="********"
+            class="input input-bordered"
+            bind:value={formData.confirmPassword}
             />
             {#if errors.confirmPassword}
-              <label class="label">
-                <span class="label-text-alt text-error">{errors.confirmPassword}</span>
-              </label>
+            <label class="label">
+              <span class="label-text-alt text-error">{errors.confirmPassword}</span>
+            </label>
             {/if}
           </div>
 
           {#if errors.submit}
-            <div class="alert alert-error mt-4">
-              <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-              <span>{errors.submit}</span>
-            </div>
+          <div class="alert alert-error mt-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <span>{errors.submit}</span>
+          </div>
           {/if}
-
+          
           {#if submitStatus === 'success'}
-            <div class="alert alert-success mt-4">
-              <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-              <span>Sign up was successful!</span>
-            </div>
+          <div class="alert alert-success mt-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <span>Sign up was successful!</span>
+          </div>
           {/if}
-
+          
           <div class="form-control mt-6">
             <button class="btn btn-primary">Sign Up</button>
           </div>
@@ -208,4 +207,3 @@
       </div>
     </div>
   </div>
-</div>
