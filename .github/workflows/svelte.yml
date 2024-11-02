@@ -38,3 +38,6 @@ jobs:
         name: build-output
         path: build/
         retention-days: 7
+
+    - name: Run Tests
+      run: npm run test -- --verbose

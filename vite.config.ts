@@ -2,22 +2,32 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vitest/config';
 import path from 'path';
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [sveltekit()],
   resolve: {
     alias: {
-      //'$app': path.resolve(__dirname, '.svelte-kit/runtime/app'),
       '$lib': path.resolve(__dirname, './src/lib'),
-      '$routes': path.resolve(__dirname, './src/routes')
-    }
+      '$routes': path.resolve(__dirname, './src/routes'),
+      ...(process.env.VITEST ? {
+        '$app': path.resolve(__dirname, './tests/mocks/app')
+      } : {})
+    },
+    conditions: mode === 'test' ? ['browser'] : [],
   },
   test: {
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./tests/setupTests.ts'],
-    include: ['src/**/*.{test,spec}.{js,ts}', 'tests/**/*.{test,spec}.{js,ts}'],
+    include: ['src/**/*.test.{js,ts}', 'src/**/*.spec.{js,ts}', 'tests/**/*.test.{js,ts}', 'tests/**/*.spec.{js,ts}'],
     deps: {
-      inline: [/^@sveltejs/]
-    }
+      inline: [/^svelte/, /@testing-library\/svelte/]
+    },
+    typecheck: {
+      enabled: true
+    },
+    passWithNoTests: false,
+    clearMocks: true,
+    mockReset: true,
+    restoreMocks: true
   }
-});
+}));

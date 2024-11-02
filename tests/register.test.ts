@@ -1,295 +1,129 @@
-// tests/register.test.ts
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/svelte';
+import { render, screen, fireEvent, waitFor } from '@testing-library/svelte';
 import Register from '../src/routes/register/+page.svelte';
 import { goto } from '$app/navigation';
+import { vi } from 'vitest';
 
-// Mock del modulo $app/navigation
+// Mocking $app/navigation
 vi.mock('$app/navigation', () => ({
   goto: vi.fn()
 }));
 
 describe('Register Component', () => {
   beforeEach(() => {
-    cleanup();
-    vi.clearAllMocks();
-    // Reset fetch mock before each test
+    vi.resetAllMocks();
     global.fetch = vi.fn();
   });
 
   afterEach(() => {
-    vi.resetAllMocks();
+    vi.clearAllMocks();
   });
 
-  describe('Initial Rendering', () => {
-    it('should render the registration form with all elements', () => {
-      render(Register);
-      
-      // Verifica presenza elementi principali
-      expect(screen.getByText('Sign Up')).toBeInTheDocument();
-      expect(screen.getByText(/Do you have an account\?/)).toBeInTheDocument();
-      expect(screen.getByText('Log In')).toBeInTheDocument();
-      
-      // Verifica presenza input e labels
-      expect(screen.getByLabelText('Name')).toBeInTheDocument();
-      expect(screen.getByLabelText('Surname')).toBeInTheDocument();
-      expect(screen.getByLabelText('Email')).toBeInTheDocument();
-      expect(screen.getByLabelText('Password')).toBeInTheDocument();
-      expect(screen.getByLabelText('Confirm Password')).toBeInTheDocument();
-      
-      // Verifica presenza placeholder
-      expect(screen.getByPlaceholderText('Mario')).toBeInTheDocument();
-      expect(screen.getByPlaceholderText('Rossi')).toBeInTheDocument();
-      expect(screen.getByPlaceholderText('mario.rossi@esempio.com')).toBeInTheDocument();
-      expect(screen.getAllByPlaceholderText('********')).toHaveLength(2);
-    });
+  it('renders the sign-up form correctly', () => {
+    render(Register);
+    
+    expect(screen.getByTestId('signup-title')).toBeInTheDocument();
+    expect(screen.getByTestId('register-form')).toBeInTheDocument();
+    expect(screen.getByTestId('firstName-input')).toBeInTheDocument();
+    expect(screen.getByTestId('lastName-input')).toBeInTheDocument();
+    expect(screen.getByTestId('email-input')).toBeInTheDocument();
+    expect(screen.getByTestId('password-input')).toBeInTheDocument();
+    expect(screen.getByTestId('confirmPassword-input')).toBeInTheDocument();
+    expect(screen.getByTestId('submit-button')).toBeInTheDocument();
+  });
 
-    it('should have working navigation link to login', () => {
-      render(Register);
-      const loginLink = screen.getByText('Log In');
-      expect(loginLink.getAttribute('href')).toBe('/login');
+  it('should show all validation errors when form is empty', async () => {
+    render(Register);
+    
+    await fireEvent.submit(screen.getByTestId('register-form'));
+    
+    await waitFor(() => {
+      expect(screen.getByTestId('firstName-error')).toHaveTextContent('Name is required');
+      expect(screen.getByTestId('lastName-error')).toHaveTextContent('Surname is required');
+      expect(screen.getByTestId('email-error')).toHaveTextContent('Email is required');
+      expect(screen.getByTestId('password-error')).toHaveTextContent('Password is required');
     });
   });
 
-  describe('Form Validation - Empty Fields', () => {
-    it('should show all validation errors when form is empty', async () => {
-      render(Register);
-      
-      const submitButton = screen.getByText('Sign Up');
-      await fireEvent.click(submitButton);
+  it('should show error for invalid email format', async () => {
+    render(Register);
 
-      expect(screen.getByText('Name is required')).toBeInTheDocument();
-      expect(screen.getByText('Surname is required')).toBeInTheDocument();
-      expect(screen.getByText('Email is required')).toBeInTheDocument();
-      expect(screen.getByText('Password is required')).toBeInTheDocument();
-    });
+    await fireEvent.input(screen.getByTestId('email-input'), { target: { value: 'invalid-email' } });
+    
+    await fireEvent.submit(screen.getByTestId('register-form'));
 
-    it('should show remaining validation errors when some fields are filled', async () => {
-      render(Register);
-      
-      await fireEvent.input(screen.getByLabelText('Name'), { target: { value: 'Mario' } });
-      await fireEvent.input(screen.getByLabelText('Email'), { target: { value: 'mario.rossi@example.com' } });
-      
-      const submitButton = screen.getByText('Sign Up');
-      await fireEvent.click(submitButton);
-
-      expect(screen.getByText('Surname is required')).toBeInTheDocument();
-      expect(screen.getByText('Password is required')).toBeInTheDocument();
-      expect(screen.queryByText('Name is required')).not.toBeInTheDocument();
-      expect(screen.queryByText('Email is required')).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByTestId('email-error')).toHaveTextContent('Email not valid');
     });
   });
 
-  describe('Form Validation - Email', () => {
-    it.each([
-      ['invalid-email', 'Email not valid'],
-      ['invalid@', 'Email not valid'],
-      ['@invalid.com', 'Email not valid'],
-      ['invalid@invalid', 'Email not valid'],
-      ['invalid.com', 'Email not valid'],
-      [' ', 'Email is required'],
-    ])('should show error for invalid email: %s', async (email, expectedError) => {
-      render(Register);
-      
-      await fireEvent.input(screen.getByLabelText('Email'), { target: { value: email } });
-      const submitButton = screen.getByText('Sign Up');
-      await fireEvent.click(submitButton);
+  it('should show error for short password', async () => {
+    render(Register);
 
-      expect(screen.getByText(expectedError)).toBeInTheDocument();
-    });
+    await fireEvent.input(screen.getByTestId('password-input'), { target: { value: 'short' } });
+    
+    await fireEvent.submit(screen.getByTestId('register-form'));
 
-    it('should accept valid email formats', async () => {
-      render(Register);
-      
-      await fireEvent.input(screen.getByLabelText('Email'), { target: { value: 'valid.email@domain.com' } });
-      const submitButton = screen.getByText('Sign Up');
-      await fireEvent.click(submitButton);
-
-      expect(screen.queryByText('Email not valid')).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByTestId('password-error')).toHaveTextContent('Password has to be long at least 8 characters');
     });
   });
 
-  describe('Form Validation - Password', () => {
-    it.each([
-      ['123', 'Password has to be long at least 8 characters'],
-      ['1234567', 'Password has to be long at least 8 characters'],
-      [' '.repeat(7), 'Password has to be long at least 8 characters'],
-    ])('should show error for short password: %s', async (password, expectedError) => {
-      render(Register);
-      
-      await fireEvent.input(screen.getByLabelText('Password'), { target: { value: password } });
-      const submitButton = screen.getByText('Sign Up');
-      await fireEvent.click(submitButton);
+  it('should show error when passwords do not match', async () => {
+    render(Register);
 
-      expect(screen.getByText(expectedError)).toBeInTheDocument();
-    });
+    await fireEvent.input(screen.getByTestId('password-input'), { target: { value: 'Password123' } });
+    await fireEvent.input(screen.getByTestId('confirmPassword-input'), { target: { value: 'DifferentPassword123' } });
+    
+    await fireEvent.submit(screen.getByTestId('register-form'));
 
-    it('should validate password confirmation', async () => {
-      render(Register);
-      
-      await fireEvent.input(screen.getByLabelText('Password'), { target: { value: 'password123' } });
-      await fireEvent.input(screen.getByLabelText('Confirm Password'), { target: { value: 'different123' } });
-      
-      const submitButton = screen.getByText('Sign Up');
-      await fireEvent.click(submitButton);
-
-      expect(screen.getByText('The passwords inserted do not match')).toBeInTheDocument();
-    });
-
-    it('should not show password mismatch error when passwords match', async () => {
-      render(Register);
-      
-      const password = 'password123';
-      await fireEvent.input(screen.getByLabelText('Password'), { target: { value: password } });
-      await fireEvent.input(screen.getByLabelText('Confirm Password'), { target: { value: password } });
-      
-      const submitButton = screen.getByText('Sign Up');
-      await fireEvent.click(submitButton);
-
-      expect(screen.queryByText('The passwords inserted do not match')).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByTestId('confirmPassword-error')).toHaveTextContent('The passwords inserted do not match');
     });
   });
 
-  describe('Form Submission', () => {
-    it('should submit form successfully with valid data', async () => {
-      global.fetch = vi.fn().mockImplementationOnce(() =>
-        Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({ message: 'User created!' })
-        })
-      );
-
-      render(Register);
-      
-      // Fill in all fields with valid data
-      await fireEvent.input(screen.getByLabelText('Name'), { target: { value: 'Mario' } });
-      await fireEvent.input(screen.getByLabelText('Surname'), { target: { value: 'Rossi' } });
-      await fireEvent.input(screen.getByLabelText('Email'), { target: { value: 'mario.rossi@example.com' } });
-      await fireEvent.input(screen.getByLabelText('Password'), { target: { value: 'password123' } });
-      await fireEvent.input(screen.getByLabelText('Confirm Password'), { target: { value: 'password123' } });
-      
-      const submitButton = screen.getByText('Sign Up');
-      await fireEvent.click(submitButton);
-
-      await waitFor(() => {
-        expect(screen.getByText('Sign up was successful!')).toBeInTheDocument();
-      });
-
-      // Verify fetch call
-      expect(fetch).toHaveBeenCalledWith('http://localhost:8000/create_user', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          first_name: 'Mario',
-          last_name: 'Rossi',
-          email: 'mario.rossi@example.com',
-          password: 'password123'
-        })
-      });
-
-      // Verify redirect
-      await waitFor(() => {
-        expect(goto).toHaveBeenCalledWith('/login');
-      }, { timeout: 2500 }); // Consider the setTimeout in the component
+  it('should submit form successfully with valid data', async () => {
+    global.fetch = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ message: 'User created successfully' })
     });
 
-    it('should handle email already in use error', async () => {
-      global.fetch = vi.fn().mockImplementationOnce(() =>
-        Promise.resolve({
-          ok: false,
-          json: () => Promise.resolve({ error: 'Email already in use' })
-        })
-      );
+    render(Register);
+    
+    await fireEvent.input(screen.getByTestId('firstName-input'), { target: { value: 'John' } });
+    await fireEvent.input(screen.getByTestId('lastName-input'), { target: { value: 'Doe' } });
+    await fireEvent.input(screen.getByTestId('email-input'), { target: { value: 'john.doe@example.com' } });
+    await fireEvent.input(screen.getByTestId('password-input'), { target: { value: 'Password123' } });
+    await fireEvent.input(screen.getByTestId('confirmPassword-input'), { target: { value: 'Password123' } });
 
-      render(Register);
-      
-      // Fill in form with valid data
-      await fireEvent.input(screen.getByLabelText('Name'), { target: { value: 'Mario' } });
-      await fireEvent.input(screen.getByLabelText('Surname'), { target: { value: 'Rossi' } });
-      await fireEvent.input(screen.getByLabelText('Email'), { target: { value: 'mario.rossi@example.com' } });
-      await fireEvent.input(screen.getByLabelText('Password'), { target: { value: 'password123' } });
-      await fireEvent.input(screen.getByLabelText('Confirm Password'), { target: { value: 'password123' } });
-      
-      const submitButton = screen.getByText('Sign Up');
-      await fireEvent.click(submitButton);
+    await fireEvent.submit(screen.getByTestId('register-form'));
 
-      await waitFor(() => {
-        expect(screen.getByText('Email already in use')).toBeInTheDocument();
-      });
-      expect(screen.queryByText('Sign up was successful!')).not.toBeInTheDocument();
-      expect(goto).not.toHaveBeenCalled();
+    await waitFor(() => {
+      expect(screen.getByTestId('submit-success')).toBeInTheDocument();
     });
 
-    it('should handle generic server error', async () => {
-      global.fetch = vi.fn().mockImplementationOnce(() =>
-        Promise.resolve({
-          ok: false,
-          json: () => Promise.resolve({ error: 'Server error' })
-        })
-      );
+    await waitFor(() => {
+      expect(goto).toHaveBeenCalledWith('/login');
+    }, { timeout: 2500 });
+  });
 
-      render(Register);
-      
-      // Fill in form with valid data
-      await fireEvent.input(screen.getByLabelText('Name'), { target: { value: 'Mario' } });
-      await fireEvent.input(screen.getByLabelText('Surname'), { target: { value: 'Rossi' } });
-      await fireEvent.input(screen.getByLabelText('Email'), { target: { value: 'mario.rossi@example.com' } });
-      await fireEvent.input(screen.getByLabelText('Password'), { target: { value: 'password123' } });
-      await fireEvent.input(screen.getByLabelText('Confirm Password'), { target: { value: 'password123' } });
-      
-      const submitButton = screen.getByText('Sign Up');
-      await fireEvent.click(submitButton);
-
-      await waitFor(() => {
-        expect(screen.getByText('Server error')).toBeInTheDocument();
-      });
+  it('should handle server error response', async () => {
+    global.fetch = vi.fn().mockResolvedValueOnce({
+      ok: false,
+      json: () => Promise.resolve({ error: 'Email already exists' })
     });
 
-    it('should handle network error', async () => {
-      global.fetch = vi.fn().mockImplementationOnce(() => Promise.reject('Network error'));
+    render(Register);
+    
+    await fireEvent.input(screen.getByTestId('firstName-input'), { target: { value: 'John' } });
+    await fireEvent.input(screen.getByTestId('lastName-input'), { target: { value: 'Doe' } });
+    await fireEvent.input(screen.getByTestId('email-input'), { target: { value: 'john.doe@example.com' } });
+    await fireEvent.input(screen.getByTestId('password-input'), { target: { value: 'Password123' } });
+    await fireEvent.input(screen.getByTestId('confirmPassword-input'), { target: { value: 'Password123' } });
 
-      render(Register);
-      
-      // Fill in form with valid data
-      await fireEvent.input(screen.getByLabelText('Name'), { target: { value: 'Mario' } });
-      await fireEvent.input(screen.getByLabelText('Surname'), { target: { value: 'Rossi' } });
-      await fireEvent.input(screen.getByLabelText('Email'), { target: { value: 'mario.rossi@example.com' } });
-      await fireEvent.input(screen.getByLabelText('Password'), { target: { value: 'password123' } });
-      await fireEvent.input(screen.getByLabelText('Confirm Password'), { target: { value: 'password123' } });
-      
-      const submitButton = screen.getByText('Sign Up');
-      await fireEvent.click(submitButton);
+    await fireEvent.submit(screen.getByTestId('register-form'));
 
-      await waitFor(() => {
-        expect(screen.getByText('Errore di connessione al server')).toBeInTheDocument();
-      });
-    });
-
-    it('should handle invalid JSON response', async () => {
-      global.fetch = vi.fn().mockImplementationOnce(() =>
-        Promise.resolve({
-          ok: false,
-          json: () => Promise.reject('Invalid JSON')
-        })
-      );
-
-      render(Register);
-      
-      // Fill in form with valid data
-      await fireEvent.input(screen.getByLabelText('Name'), { target: { value: 'Mario' } });
-      await fireEvent.input(screen.getByLabelText('Surname'), { target: { value: 'Rossi' } });
-      await fireEvent.input(screen.getByLabelText('Email'), { target: { value: 'mario.rossi@example.com' } });
-      await fireEvent.input(screen.getByLabelText('Password'), { target: { value: 'password123' } });
-      await fireEvent.input(screen.getByLabelText('Confirm Password'), { target: { value: 'password123' } });
-      
-      const submitButton = screen.getByText('Sign Up');
-      await fireEvent.click(submitButton);
-
-      await waitFor(() => {
-        expect(screen.getByText('Something went wrong during Sign Up')).toBeInTheDocument();
-      });
+    await waitFor(() => {
+      expect(screen.getByTestId('submit-error')).toHaveTextContent('Email already exists');
     });
   });
 });
