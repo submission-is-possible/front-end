@@ -9,23 +9,26 @@
 </script>
 
 <div class="navbar bg-base-300 shadow-xl">
-    <div class="navbar-start">
+  <div class="navbar-start flex items-center gap-4">
+    <!-- Company logo -->
 
-      <!-- Company logo -->
-      <img src={Logo} alt="Company Logo" class="w-10 h-10" />
+    <a href="/">
+    <div class="flex items-center gap-2">
+        <img src={Logo} alt="Company Logo" class="w-10 h-10" />
+      <span class="text-xl">Submission is Possible </span>
+    </div>
+    </a>
 
-      {#if isLoggedin}
-        <ul class="menu menu-horizontal px-1">
-          <li><a href="/conference">Conference</a></li>
-          <li><a href="/reviews">Reviews</a></li>
-          <li><a href="/submissions">Submissions</a></li>
-        </ul>
-      {/if}
-    </div>
-    <div class="navbar-center">
-      <a href="/" class="btn btn-ghost text-xl bg-base">Submission is Possible </a>
-    </div>
-    <div class="navbar-end">
-        <LoginButton />
-    </div>
+    {#if isLoggedin}
+      <ul class="menu menu-horizontal px-1">
+        <li><a href="/conference">Conference</a></li>
+        <li><a href="/reviews">Reviews</a></li>
+        <li><a href="/submissions">Submissions</a></li>
+      </ul>
+    {/if}
   </div>
+  
+  <div class="navbar-end">
+      <LoginButton />
+  </div>
+</div>
