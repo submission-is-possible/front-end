@@ -1,7 +1,9 @@
 <script lang="ts">
   import Logo from '$lib/images/logo.png'
 
-  let isLoggedin: Boolean = false;
+  import { user } from '$stores/userStore';
+  let userData = $user;
+
 </script>
 
 <div class="flex flex-col">
@@ -14,7 +16,7 @@
         Managing conventions since 2024
       </p>
     </aside>
-    {#if isLoggedin}
+    {#if userData.isLoggedin }
       <nav>
         <h6 class="footer-title">Services</h6>
         <ul class="menu menu-nav">
