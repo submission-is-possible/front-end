@@ -1,15 +1,20 @@
 <script lang="ts">
-    // This component should be listen to a user service or something similar that
-    //  contains the user state and set isLoggedin variable accordingly
-    let isLoggedin: Boolean = false;
+
+  import { user, clearUser } from '$stores/userStore';
+  let userData = $user;
+
 </script>
 
-<button class="btn btn-primary rounded-full">
-    {#if isLoggedin}
+
+{#if userData.isLoggedin}
+    <button on:click={() => {clearUser(); window.location.href = "/";}} class="btn btn-primary rounded-full">
         <iconify-icon icon="material-symbols:logout" width="24" height="24"></iconify-icon>
         <span>Logout</span>
-    {:else}
+    </button>
+{:else}
+    <button on:click={() => window.location.href = "/login"} class="btn btn-primary rounded-full">
         <iconify-icon icon="material-symbols:login" width="24" height="24"></iconify-icon>
         <span>Login</span>
-    {/if}
-</button>
+    </button>
+{/if}
+

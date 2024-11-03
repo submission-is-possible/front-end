@@ -2,9 +2,8 @@
   import LoginButton from './LoginButton.svelte';
   import Logo from '$lib/images/logo.png'
 
-  // This component should be listen to a user service or something similar that
-  //  contains the user state and set isLoggedin variable accordingly
-  export let isLoggedin: Boolean = false;
+  import { user } from '$stores/userStore';
+  let userData = $user;
 
 </script>
 
@@ -14,7 +13,7 @@
       <!-- Company logo -->
       <img src={Logo} alt="Company Logo" class="w-10 h-10" />
 
-      {#if isLoggedin}
+      {#if userData.isLoggedin}
         <ul class="menu menu-horizontal px-1">
           <li><a href="/conference">Conference</a></li>
           <li><a href="/reviews">Reviews</a></li>

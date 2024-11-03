@@ -10,7 +10,13 @@
 		"sourceMap": true,
 		"strict": true,
 		"module": "esnext",
-		"moduleResolution": "bundler"
+		"moduleResolution": "bundler",
+		//"baseUrl": ".",
+		//"paths": {
+		//	"$stores/*": ["src/stores/*"],
+		//	"$lib/*": ["src/lib/*"],
+		//	"$types/*": ["src/types/*"]
+		//  }
 	}
 	// Path aliases are handled by https://svelte.dev/docs/kit/configuration#alias
 	// except $lib which is handled by https://svelte.dev/docs/kit/configuration#files

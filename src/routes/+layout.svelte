@@ -3,6 +3,11 @@
   import Footer from '$lib/components/Footer.svelte';
   import Navbar from '$lib/components/Navbar.svelte';
   import CreateConferenceButton from '$lib/components/CreateConferenceButton.svelte';
+
+  //import { user } from '$stores/userStore';
+  //let userData = $user;
+
+
 </script>
 
 <div class="min-h-screen flex flex-col justify-between">

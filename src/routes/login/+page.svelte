@@ -1,46 +1,53 @@
 <script lang="ts">
+  import { setUser } from '$stores/userStore';
+  interface FormData {
+    error: string;
+    email: string;
+    password: string;
+  }
 
-interface FormData {
-  error: string;
-  email: string;
-  password: string;
-}
+  let form: FormData = {
+    error: '',
+    email: '',
+    password: ''
+  };
+  let loading = false;
 
-let form: FormData = {
-  error: '',
-  email: '',
-  password: ''
-};
-let loading = false;
+  async function handleSubmit(event: SubmitEvent): Promise<void> {
+      loading = true;
+      
+      try {
+          const response = await fetch('/login', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                  email: form.email,
+                  password: form.password
+              })
+          });
+          
+          const data = await response.json();
 
-async function handleSubmit(event: SubmitEvent): Promise<void> {
-    loading = true;
-    
-    try {
-        const response = await fetch('http://localhost:8000/users/login/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                email: form.email,
-                password: form.password
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            window.location.href = '/';
-        } else {
-            form.error = data.error || 'Error during the login. Retry.';
-        }
-    } catch (error) {
-        form.error = 'Server connection error. Retry.';
-    } finally {
-        loading = false;
-    }
-}
+          if(data.user){
+            setUser(data.user);
+          }
+
+          console.log(data.message);
+          
+          if (response.ok) {
+              window.location.href = '/';
+          } else {
+              form.error = data.error || 'Error during the login. Retry.';
+          }
+      } catch (error) {
+          console.error('Server Unrechable');
+          form.error = 'Server connection error. Retry.';
+      } finally {
+          loading = false;
+      }
+  }
 </script>
   
   <div class="hero-content flex-col">
@@ -61,7 +68,6 @@ async function handleSubmit(event: SubmitEvent): Promise<void> {
         {#if form?.error}
             <div class="alert alert-error shadow-lg rounded-2xl">
                 <div>
-                    
                     <span>{form.error}</span>
                 </div>
             </div>
