@@ -16,12 +16,15 @@ jobs:
       with:
         node-version: '18'
         cache: 'npm'
-        
+
     - name: Install Dependencies
       run: npm ci
       
     - name: Verify ESLint Installation
       run: npx eslint --version
+
+    - name: install Lint dependencies
+      run: npm install --save-dev eslint-plugin-svelte3
 
     - name: Lint
       run: npm run lint
