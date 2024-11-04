@@ -8,6 +8,7 @@ const sessionStore = new Map<string, User >();
 sessionStore.set('secureRandomTokenForUser', { id: 1, email: 'User', isLoggedin: true });
 
 export const load: LayoutServerLoad = async ({ cookies }) => {
+    /*
     const sessionToken = cookies.get('session');
     if (!sessionToken) {
         throw redirect(302, '/login');
@@ -23,4 +24,5 @@ export const load: LayoutServerLoad = async ({ cookies }) => {
     }
 
     setUser(user)
+    */
 }
