@@ -1,14 +1,12 @@
 name: SvelteKit CI
 on:
   push:
-    branches:
-      - main
-      - dev
+    branches-ignore:
+      - 'gh-pages'
 
   pull_request:
-    branches:
-      - main
-      - dev
+    branches-ignore:
+      - 'gh-pages'
 
 jobs:
   test-and-build:
