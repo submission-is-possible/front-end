@@ -1,5 +1,5 @@
 import { writable, type Writable } from 'svelte/store';
-import {browser} from '$app/environment';
+import { browser } from '$app/environment';
 
 const nullUser = { email: null, id: null, isLoggedin:false};
 let lUser : User = nullUser;
