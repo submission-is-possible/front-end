@@ -13,13 +13,14 @@
     email: '',
     password: ''
   };
+
   let loading = false;
 
   async function handleSubmit(event: SubmitEvent): Promise<void> {
       loading = true;
       
       try {
-          const response = await fetch('/login', {
+          const response = await fetch('http://localhost:8000/users/login/', {
               method: 'POST',
               headers: {
                   'Content-Type': 'application/json',
@@ -29,25 +30,21 @@
                   password: form.password
               })
           });
-          
+          debugger;
           const data = await response.json();
+          console.log("data: " + data);
 
-          console.log(data);
-          
-          if(data.user){
-            setUser(data.user);
+          if(!response.ok){
+            form.error = data.error;
+            return;
           }
 
-          console.log(data.message);
-          
-          if (response.ok) {
-              goto('/');
-          } else {
-              form.error = data.error || 'Error during the login. Retry.';
-          }
+          setUser({email: '', id: data.user_id, isLoggedin : true});
+          goto('/');
+
       } catch (error) {
-          console.error('Server Unrechable');
-          form.error = 'Server connection error. Retry.';
+          console.error(error);
+          form.error = 'Server Connection Error. Retry.';
       } finally {
           loading = false;
       }
