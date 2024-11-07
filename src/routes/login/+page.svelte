@@ -1,5 +1,7 @@
 <script lang="ts">
+  import { goto } from '$app/navigation';
   import { setUser } from '$stores/userStore';
+  
   interface FormData {
     error: string;
     email: string;
@@ -11,13 +13,14 @@
     email: '',
     password: ''
   };
+
   let loading = false;
 
   async function handleSubmit(event: SubmitEvent): Promise<void> {
       loading = true;
       
       try {
-          const response = await fetch('/login', {
+          const response = await fetch('http://localhost:8000/users/login/', {
               method: 'POST',
               headers: {
                   'Content-Type': 'application/json',
@@ -27,23 +30,21 @@
                   password: form.password
               })
           });
-          
+          debugger;
           const data = await response.json();
+          console.log("data: " + data);
 
-          if(data.user){
-            setUser(data.user);
+          if(!response.ok){
+            form.error = data.error;
+            return;
           }
 
-          console.log(data.message);
-          
-          if (response.ok) {
-              window.location.href = '/';
-          } else {
-              form.error = data.error || 'Error during the login. Retry.';
-          }
+          setUser({email: '', id: data.user_id, isLoggedin : true});
+          goto('/');
+
       } catch (error) {
-          console.error('Server Unrechable');
-          form.error = 'Server connection error. Retry.';
+          console.error(error);
+          form.error = 'Server Connection Error. Retry.';
       } finally {
           loading = false;
       }
@@ -54,7 +55,7 @@
     <div class="text-center">
       <h1 class="text-5xl font-bold">Login</h1>
       <p class="py-6">Are you new here?
-        <a href="/register" class="link link-primary">Sign Up!</a>
+        <a href="/register" class="link link-primary" data-testid="signup-navigation">Sign Up!</a>
       </p>
     </div>
     <div class="card w-96 bg-base-100 shadow-xl rounded-2xl">
@@ -64,9 +65,10 @@
           method="POST" 
           on:submit|preventDefault={handleSubmit}
           class="space-y-4"
+          data-testid="login-form"
         >
         {#if form?.error}
-            <div class="alert alert-error shadow-lg rounded-2xl">
+            <div class="alert alert-error shadow-lg rounded-2xl" data-testid="error-message">
                 <div>
                     <span>{form.error}</span>
                 </div>
@@ -86,6 +88,7 @@
               class:input-error={form.error}
               placeholder="Enter your email"
               required
+              data-testid="email-input"
             />
           </div>
   
@@ -102,6 +105,7 @@
               class:input-error={form?.error}
               placeholder="Enter your password"
               required
+              data-testid="password-input"
             />
           </div>
   
@@ -113,6 +117,7 @@
                 id="login-remember"
                 name="rememberMe"
                 class="checkbox checkbox-primary rounded-xl"
+                data-testid="remember-checkbox"
               />
             </label>
           </div>
@@ -123,9 +128,10 @@
               class="btn btn-primary w-full rounded-2xl" 
               name="login"
               disabled={loading}
+              data-testid="login-button"
             >
               {#if loading}
-                <span class="loading loading-spinner"></span>
+                <span class="loading loading-spinner" data-testid="loading-mark"></span>
               {/if}
               Login
             </button>

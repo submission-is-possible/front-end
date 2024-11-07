@@ -3,7 +3,7 @@
   import Logo from '$lib/images/logo.png'
 
   import { user } from '$stores/userStore';
-  let userData = $user;
+  let isLoggedin : boolean = $derived(!!$user?.isLoggedin);
 
 </script>
 
@@ -18,7 +18,7 @@
     </div>
     </a>
 
-    {#if userData.isLoggedin}
+    {#if isLoggedin}
       <ul class="menu menu-horizontal px-1">
         <li><a href="/conference">Conference</a></li>
         <li><a href="/reviews">Reviews</a></li>

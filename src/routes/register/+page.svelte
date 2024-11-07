@@ -80,18 +80,20 @@
 
       const data = await response.json();
       
-      if (response.ok) {
-        submitStatus = 'success';
-        setTimeout(() => {
-          goto('/login');
-        }, 2000);
-      } else {
+      if (!response.ok) {
         submitStatus = 'error';
-        errors.submit = data.error || 'Something went wrong during Sign Up';
+        errors.submit = data.error;
+        return;
       }
+
+      submitStatus = 'success';
+      setTimeout(() => {
+        goto('/login');
+      }, 2000);
+       
     } catch (error) {
       submitStatus = 'error';
-      errors.submit = 'Errore di connessione al server';
+      errors.submit = 'Server Connection Error. Retry.';
     }
   }
 </script>
@@ -106,7 +108,7 @@
 
   <div class="card w-1/2 shadow-2xl bg-base-100">
     <div class="card-body flex items-center">
-      <form on:submit={handleSubmit} data-testid="register-form">
+      <form onsubmit={handleSubmit} data-testid="register-form">
         <!-- First Name Field -->
         <div class="form-control">
           <label class="label" for="firstName">
@@ -122,9 +124,7 @@
             data-testid="firstName-input"
           />
           {#if errors.firstName}
-            <label class="label">
               <span class="label-text-alt text-error" role="alert" data-testid="firstName-error">{errors.firstName}</span>
-            </label>
           {/if}
         </div>
         
@@ -143,9 +143,7 @@
             data-testid="lastName-input"
           />
           {#if errors.lastName}
-            <label class="label">
               <span class="label-text-alt text-error" role="alert" data-testid="lastName-error">{errors.lastName}</span>
-            </label>
           {/if}
         </div>
         
@@ -164,9 +162,7 @@
             data-testid="email-input"
           />
           {#if errors.email}
-            <label class="label">
               <span class="label-text-alt text-error" role="alert" data-testid="email-error">{errors.email}</span>
-            </label>
           {/if}
         </div>
 
@@ -185,9 +181,7 @@
             data-testid="password-input"
           />
           {#if errors.password}
-            <label class="label">
               <span class="label-text-alt text-error" role="alert" data-testid="password-error">{errors.password}</span>
-            </label>
           {/if}
         </div>
         
@@ -206,9 +200,7 @@
             data-testid="confirmPassword-input"
           />
           {#if errors.confirmPassword}
-            <label class="label">
               <span class="label-text-alt text-error" role="alert" data-testid="confirmPassword-error">{errors.confirmPassword}</span>
-            </label>
           {/if}
         </div>
 

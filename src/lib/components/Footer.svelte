@@ -2,7 +2,7 @@
   import Logo from '$lib/images/logo.png'
 
   import { user } from '$stores/userStore';
-  let userData = $user;
+  let isLoggedin : boolean = $derived(!!$user?.isLoggedin);
 
 </script>
 
@@ -16,7 +16,7 @@
         Managing conventions since 2024
       </p>
     </aside>
-    {#if userData.isLoggedin }
+    {#if isLoggedin }
       <nav>
         <h6 class="footer-title">Services</h6>
         <ul class="menu menu-nav">
