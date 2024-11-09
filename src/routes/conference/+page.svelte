@@ -16,6 +16,7 @@
   let conferences: Conference[] = [];
   let currentPage = 1;
   let totalPages = 1;
+  let totalConferences = 1;
   let pageSize = 10; // Imposta il valore della dimensione della pagina a 10
   let isTableView = true;
 
@@ -38,6 +39,7 @@
       conferences = data.conferences;
       currentPage = data.current_page;
       totalPages = data.total_pages;
+      totalConferences = data.total_conferences;
       console.log('Conferenze:', conferences);
     } catch (error) {
       console.error('Errore:', error);
