@@ -1,5 +1,6 @@
 <script lang="ts">
     import { fade } from 'svelte/transition';
+    import ConferenceCard from '../../lib/components/ConferenceCard.svelte';
   
     // TODO: we need of course to replace it with actual data getting from the server
     //          with a pagination
@@ -102,22 +103,10 @@
       </div>
     {:else}
       <!-- Card View -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" transition:fade>
+      <div class="grid grid-cols-3 gap-4" transition:fade>
         {#each conferences as conference (conference.id)}
-          <div class="card bg-base-100 shadow-xl">
-            <div class="card-body">
-              <h2 class="card-title">{conference.title}</h2>
-              <div class="flex flex-col gap-2">
-                <span class="badge {getRoleBadgeColor(conference.role)} badge-lg">
-                  {conference.role}
-                </span>
-                <div class="text-sm opacity-70">
-                  Deadline: {formatDate(conference.deadline)}
-                </div>
-              </div>
-            </div>
-          </div>
+          <ConferenceCard {conference} />
         {/each}
-      </div>
+      </div>             
     {/if}
   </div>
