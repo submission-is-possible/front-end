@@ -1,10 +1,11 @@
 <!-- ConferenceCard.svelte -->
 <script lang="ts">
-  export let conference: { id: number; title: string; role: string; deadline: string };
+  export let conference: { id: number; title: string; description: string; role: string; deadline: string };
 </script>
 
 <div class="card">
-  <h3>{conference.title}</h3>
+  <p><strong>{conference.title}</p>
+  <p>{conference.description}</p>
   <p><strong>Role:</strong> {conference.role}</p>
   <p><strong>Deadline:</strong> {conference.deadline}</p>
 </div>
