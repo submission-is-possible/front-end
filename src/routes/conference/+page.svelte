@@ -10,7 +10,7 @@
     description: string;
     created_at: string;
     deadline: string;
-    role: string; // Aggiunto il campo role
+    roles: string; // Aggiunto il campo role
   }
 
   let conferences: Conference[] = [];
@@ -39,6 +39,8 @@
       currentPage = data.current_page;
       totalPages = data.total_pages;
       totalConferences = data.total_conferences;
+
+      console.log(conferences);
 
     } catch (error) {
       console.error('Errore:', error);
@@ -102,7 +104,7 @@
             <tr class="hover">
               <td>{conference.title}</td>
               <td>{conference.description}</td>
-              <td>{conference.role || 'N/A'}</td>
+              <td>{conference.roles || 'N/A'}</td>
               <td>{formatDate(conference.created_at)}</td>
               <td>{formatDate(conference.deadline)}</td>
             </tr>
@@ -118,7 +120,7 @@
             id: conference.id,
             title: conference.title,
             description: conference.description,
-            role: conference.role || 'N/A',
+            role: conference.roles || 'N/A',
             deadline: formatDate(conference.deadline)
           }}
         />
