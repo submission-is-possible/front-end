@@ -1,6 +1,7 @@
 <script lang="ts">
   import { fade } from 'svelte/transition';
   import { onMount } from 'svelte';
+  import { goto } from '$app/navigation';
   import { user } from '$stores/userStore';
   import ConferenceCard from '../../lib/components/ConferenceCard.svelte';
 
@@ -11,6 +12,14 @@
     created_at: string;
     deadline: string;
     roles: string[]; // Cambiato in array di stringhe
+  }
+
+  function truncate(text: string, maxLength: number) {
+    return text.length > maxLength ? text.slice(0, maxLength) + '...' : text;
+  }
+
+  function goToConferenceDetail(conferenceId: number) {
+    goto(`/reviews/`);
   }
 
   let conferences: Conference[] = [];
@@ -119,9 +128,9 @@ function getRoleColor(role: string) {
       </thead>
       <tbody>
         {#each conferences as conference (conference.id)}
-          <tr class="hover">
-            <td>{conference.title}</td>
-            <td>{conference.description}</td>
+          <tr class="hover" on:click={() => goToConferenceDetail(conference.id)} style="cursor: pointer;">
+            <td>{truncate(conference.title, 20)}</td>
+            <td>{truncate(conference.description, 100)}</td>
             <td>
               {#each conference.roles as role}
                 <span class="badge {getRoleColor(role)} mr-1">{getRoleAbbreviation(role)}</span>
