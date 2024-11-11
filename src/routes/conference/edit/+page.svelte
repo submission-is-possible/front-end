@@ -1,126 +1,133 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
-  import { onMount } from 'svelte';
-  import { user } from '$stores/userStore';
-  import { get } from 'svelte/store';
-
-  let conferencePath: string | URL = "/conference";
-
-  interface Conference {
-    id: number;
-    title: string;
-    admin_id: number;
-    deadline: string;
-    description: string;
-    created_at: string;
-  }
-
-  interface FormData {
-    conference_id: number;
-    title: string;
-    deadline: string;
-    description: string;
-    user_id: number;
-  }
-
-  interface FormErrors {
-    title?: boolean;
-    deadline?: boolean;
-    description?: boolean;
-    submit?: string;
-  }
-
-  let formData: FormData = {
-    conference_id: 0,
-    title: '',
-    deadline: '',
-    description: '',
-    user_id: 0
-  };
-
-  let originalData: Conference | null = null;
-  let errors: FormErrors = {};
-  let submitStatus: string = '';
-  let isLoading: boolean = true;
-
-  onMount(async () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const conferenceId = urlParams.get('id');
-
-    if (!conferenceId) {
-      errors.submit = 'Conference ID not found';
-      isLoading = false;
-      return;
+    import { goto } from '$app/navigation';
+    import { onMount } from 'svelte';
+    import { user } from '$stores/userStore';
+    import { get } from 'svelte/store';
+  
+    let conferencePath: string | URL = "/conference";
+  
+    interface Conference {
+      id: number;
+      title: string;
+      admin_id: number;
+      deadline: string;
+      description: string;
+      created_at: string;
     }
-
-    try {
-      const response = await fetch(`http://localhost:8000/conference/${conferenceId}/`);
-      if (!response.ok) {
-        errors.submit = 'Failed to load conference data';
+  
+    interface FormData {
+      conference_id: number;
+      title: string;
+      deadline: string;
+      description: string;
+      user_id: number;
+    }
+  
+    interface FormErrors {
+      title?: boolean;
+      deadline?: boolean;
+      description?: boolean;
+      submit?: string;
+    }
+  
+    let formData: FormData = {
+      conference_id: 0,
+      title: '',
+      deadline: '',
+      description: '',
+      user_id: 0
+    };
+  
+    let originalData: Conference | null = null;
+    let errors: FormErrors = {};
+    let submitStatus: string = '';
+    let isLoading: boolean = true;
+  
+    onMount(async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const conferenceId = urlParams.get('id');
+  
+      if (!conferenceId) {
+        errors.submit = 'Conference ID not found';
         isLoading = false;
         return;
       }
-
-      originalData = await response.json();
-      if (originalData) {
-        formData = {
-          conference_id: originalData.id,
-          title: originalData.title,
-          deadline: originalData.deadline,
-          description: originalData.description,
-          user_id: get(user)?.id ?? 0
-        };
+  
+      try {
+        const response = await fetch(`http://localhost:8000/conference/${conferenceId}/`);
+        if (!response.ok) {
+          errors.submit = 'Failed to load conference data';
+          isLoading = false;
+          return;
+        }
+  
+        originalData = await response.json();
+        if (originalData) {
+          formData = {
+            conference_id: originalData.id,
+            title: originalData.title,
+            deadline: new Date(originalData.deadline).toISOString().split('T')[0],
+            description: originalData.description,
+            user_id: get(user)?.id || 0
+          };
+        }
+  
+        isLoading = false;
+      } catch (error) {
+        errors.submit = 'Error loading conference data';
         isLoading = false;
       }
-    } catch (error) {
-      errors.submit = 'Failed to load conference data';
-      isLoading = false;
-    }
-  });
-
-  async function handleSubmit(event: Event) {
-    event.preventDefault();
-    errors = {};
-
-    if (!formData.title.trim()) {
-      errors.title = true;
-    }
-    if (!formData.description.trim()) {
-      errors.description = true;
-    }
-    if (new Date(formData.deadline) <= new Date()) {
-      errors.deadline = true;
-    }
-
-    if (Object.keys(errors).length > 0) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`http://localhost:8000/conference/${formData.conference_id}/`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        errors.submit = errorData.error || 'Failed to update conference';
-        return;
+    });
+  
+    function validateForm(): boolean {
+      errors = {};
+  
+      if (!formData.title?.trim()) {
+        errors.title = true;
       }
-
-      submitStatus = 'success';
-      setTimeout(() => goto(conferencePath), 2000);
-    } catch (error) {
-      errors.submit = 'Failed to update conference';
+  
+      if (!formData.description?.trim()) {
+        errors.description = true;
+      }
+  
+      if (!formData.deadline || new Date(formData.deadline) < new Date()) {
+        errors.deadline = true;
+      }
+  
+      return Object.keys(errors).length === 0;
     }
-  }
-</script>
-
-
- 
+  
+    async function handleSubmit(event: SubmitEvent): Promise<void> {
+      event.preventDefault();
+  
+      if (!validateForm()) return;
+  
+      try {
+        const response = await fetch('http://localhost:8000/conference/edit/', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData)
+        });
+  
+        const data = await response.json();
+  
+        if (!response.ok) {
+          submitStatus = 'error';
+          errors.submit = data.error || 'Error updating conference';
+          return;
+        }
+  
+        submitStatus = 'success';
+        await goto(conferencePath);
+  
+      } catch (error) {
+        submitStatus = 'error';
+        errors.submit = 'Server Connection Error. Please try again.';
+      }
+    }
+  </script>
   
   <div class="p-8">
     <div class="flex items-center justify-between mb-6">
@@ -158,11 +165,6 @@
             class="input input-bordered w-full" 
             data-testid="title-input"
           />
-          {#if errors.submit}
-          <div class="alert alert-error" role="alert" data-testid="server-error">
-            {errors.submit}
-          </div>
-          {/if}
           {#if errors.title}
             <span class="label-text-alt text-error" role="alert" data-testid="title-error">
               Title is required
