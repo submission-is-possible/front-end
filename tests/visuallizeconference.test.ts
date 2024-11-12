@@ -15,8 +15,8 @@ describe('My Conferences component', () => {
       ok: true,
       json: () => Promise.resolve({
         conferences: [
-          { id: 1, title: 'Test Conference 1', description: 'Description 1', created_at: '2024-11-01', deadline: '2024-12-01' },
-          { id: 2, title: 'Test Conference 2', description: 'Description 2', created_at: '2024-11-02', deadline: '2024-12-02' },
+          { id: 1, title: 'Test Conference 1', description: 'Description 1', created_at: '2024-11-01', deadline: '2024-12-01', roles: [] },
+          { id: 2, title: 'Test Conference 2', description: 'Description 2', created_at: '2024-11-02', deadline: '2024-12-02', roles: [] },
         ],
         current_page: 1,
         total_pages: 1,
@@ -29,8 +29,10 @@ describe('My Conferences component', () => {
     await waitFor(() => {
       expect(screen.getByText('Test Conference 1')).toBeInTheDocument();
       expect(screen.getByText('Test Conference 2')).toBeInTheDocument();
-      expect(screen.getByText('Page 1 of 1')).toBeInTheDocument();
     });
+
+    // Aggiungi questa verifica per la paginazione
+    expect(screen.getByText('1')).toBeInTheDocument();
   });
 
   

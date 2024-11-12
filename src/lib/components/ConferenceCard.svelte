@@ -1,14 +1,48 @@
-<!-- ConferenceCard.svelte -->
 <script lang="ts">
-  export let conference: { id: number; title: string; description: string; role: string; deadline: string };
+  import { goto } from '$app/navigation';
+  export let conference: { id: number; title: string; description: string; role: string[]; deadline: string };
+
+  function truncate(text: string, maxLength: number) {
+    return text.length > maxLength ? text.slice(0, maxLength) + '...' : text;
+  }
+
+  function getRoleColor(role: string) {
+    switch (role) {
+      case 'admin': return 'bg-red-500';
+      case 'author': return 'bg-blue-500';
+      case 'reviewer': return 'bg-green-500';
+      default: return 'bg-gray-500';
+    }
+  }
+
+  function goToConferenceDetail(conferenceId: number) {
+    goto(`/reviews/`);
+  }
+
+  function getRoleInitial(role: string) {
+    switch (role) {
+      case 'admin': return 'AD';
+      case 'author': return 'AU';
+      case 'reviewer': return 'RE';
+      default: return '??';
+    }
+  }
 </script>
 
-<div class="card">
-  <p><strong>{conference.title}</p>
-  <p>{conference.description}</p>
-  <p><strong>Role:</strong> {conference.role}</p>
+<button class="card" on:click={() => goToConferenceDetail(conference.id)} aria-label="Conference details">
+  <p><strong>{truncate(conference.title, 20)}</strong></p>
+  <p>{truncate(conference.description, 40)}</p>
+  
+  <p><strong>Roles:</strong>
+    {#each conference.role as role}
+      <span class={`inline-block text-white text-xs font-bold rounded-full px-2 py-1 mr-1 ${getRoleColor(role)}`}>
+        {getRoleInitial(role)}
+      </span>
+    {/each}
+  </p>
+  
   <p><strong>Deadline:</strong> {conference.deadline}</p>
-</div>
+</button>
 
 <style>
   .card {
@@ -17,15 +51,14 @@
     padding: 16px;
     background-color: #f9f9f9;
     width: 200px;
-    color: #333; /* Colore testo tema chiaro */
+    color: #333;
   }
-
-  /* Stili per il tema scuro */
+  
   @media (prefers-color-scheme: dark) {
     .card {
       border: 1px solid #555;
       background-color: #333;
-      color: #f9f9f9; /* Colore testo tema scuro */
+      color: #f9f9f9;
     }
   }
 </style>
