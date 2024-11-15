@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/svelte';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import EditConference from '../src/routes/conference/edit/+page.svelte';
+import EditConference from '../src/routes/conference/detail/+page.svelte';
 import { goto } from '$app/navigation';
 
 // Mock dependencies
