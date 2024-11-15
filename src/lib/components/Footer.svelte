@@ -1,8 +1,15 @@
 <script lang="ts">
   import Logo from '$lib/images/logo.png'
-
+  import { clearConference } from '$stores/conferenceStore';
   import { user } from '$stores/userStore';
+  
   let isLoggedin : boolean = $derived(!!$user?.isLoggedin);
+
+  let navItems = [
+      { label: 'Conference', link: '/conference', visible: true },
+      { label: 'Reviews', link: '/reviews', visible: true },
+      { label: 'Submissions', link: '/submissions', visible: false}
+    ];
 
 </script>
 
@@ -20,15 +27,9 @@
       <nav>
         <h6 class="footer-title">Services</h6>
         <ul class="menu menu-nav">
-          <li>
-            <a href="/conference">Conference</a>
-          </li>
-          <li>
-            <a href="/reviews">Reviews</a>
-          </li>
-          <li>
-            <a href="/submissions">Submissions</a>
-          </li>
+          {#each navItems as item}
+            <li><a onclick={()=>clearConference()} href={item.link}>{item.label}</a></li>
+          {/each}
         </ul>
       </nav>
     {/if}
