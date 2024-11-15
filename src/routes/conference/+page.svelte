@@ -12,6 +12,7 @@
     created_at: string;
     deadline: string;
     roles: string[]; // Cambiato in array di stringhe
+    user_id: number;
   }
 
   function truncate(text: string, maxLength: number) {
@@ -19,7 +20,7 @@
   }
 
   function goToConferenceDetail(conferenceId: number) {
-    goto(`/reviews/`);
+    goto(`/conference/${conferenceId}/`);
   }
 
   let conferences: Conference[] = [];
@@ -152,7 +153,8 @@ function getRoleColor(role: string) {
             title: conference.title,
             description: conference.description,
             role: conference.roles,  // Passa l'array di ruoli
-            deadline: formatDate(conference.deadline)
+            deadline: formatDate(conference.deadline),
+            user_id: conference.user_id
           }}
         />
       {/each}

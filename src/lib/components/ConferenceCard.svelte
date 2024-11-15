@@ -1,6 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  export let conference: { id: number; title: string; description: string; role: string[]; deadline: string };
+  export let conference: { id: number; title: string; description: string; role: string[]; deadline: string; user_id: number};
 
   function truncate(text: string, maxLength: number) {
     return text.length > maxLength ? text.slice(0, maxLength) + '...' : text;
@@ -16,7 +16,7 @@
   }
 
   function goToConferenceDetail(conferenceId: number) {
-    goto(`/reviews/`);
+    goto(`/conference/${conferenceId}/`);
   }
 
   function getRoleInitial(role: string) {
