@@ -127,7 +127,7 @@
                     <label for="date" class="label">
                         <span class="label-text">Paper Abstract</span>
                     </label>
-                    <input id="date" type="file" class="input input-bordered w-full"
+                    <input id="file_loader" type="file" class="input input-bordered w-full"
                         bind:value={formData.paper_file} 
                         onchange={handleFileChange} data-testid="date-input"/>
                     {#if errors.paper_file}
