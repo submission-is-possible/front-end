@@ -3,25 +3,10 @@
     import { onMount } from 'svelte';
     import { user } from '$stores/userStore';
     import { get } from 'svelte/store';
-  
+    import { conference } from '$stores/conferenceStore';
+    import { Conference } from '$lib/models/conference'
+ 
     let conferencePath: string | URL = "/conference";
-  
-    interface Conference {
-      id: number;
-      title: string;
-      admin_id: number;
-      deadline: string;
-      description: string;
-      created_at: string;
-    }
-  
-    interface FormData {
-      conference_id: number;
-      title: string;
-      deadline: string;
-      description: string;
-      user_id: number;
-    }
   
     interface FormErrors {
       title?: boolean;
@@ -30,19 +15,14 @@
       submit?: string;
     }
   
-    let formData: FormData = {
-      conference_id: 0,
-      title: '',
-      deadline: '',
-      description: '',
-      user_id: 0
-    };
+    let formData: Conference | null = $conference
   
-    let originalData: Conference | null = null;
+    //let originalData: Conference | null = null;
     let errors: FormErrors = {};
     let submitStatus: string = '';
-    let isLoading: boolean = true;
+    //let isLoading: boolean = true;
   
+    /*
     onMount(async () => {
       const urlParams = new URLSearchParams(window.location.search);
       const conferenceId = urlParams.get('id');
@@ -78,19 +58,19 @@
         isLoading = false;
       }
     });
-  
+  */
     function validateForm(): boolean {
       errors = {};
   
-      if (!formData.title?.trim()) {
+      if (!formData?.title?.trim()) {
         errors.title = true;
       }
   
-      if (!formData.description?.trim()) {
+      if (!formData?.description?.trim()) {
         errors.description = true;
       }
   
-      if (!formData.deadline || new Date(formData.deadline) < new Date()) {
+      if (!formData?.deadline || new Date(formData.deadline) < new Date()) {
         errors.deadline = true;
       }
   
@@ -108,6 +88,7 @@
           headers: {
             'Content-Type': 'application/json',
           },
+          credentials: 'include',
           body: JSON.stringify(formData)
         });
   
@@ -140,16 +121,13 @@
       <h1 class="text-2xl font-bold">Edit Conference</h1>
     </div>
   
-    {#if isLoading}
-      <div class="flex justify-center items-center h-64" role="status">
-        <span class="loading loading-spinner loading-lg"></span>
-      </div>
-    {:else if errors.submit}
+    
+    {#if !formData}
       <div class="alert alert-error" role="alert">
         <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
-        <span>{errors.submit}</span>
+        <span>No Conference Selected</span>
       </div>
     {:else}
       <form class="space-y-6" on:submit={handleSubmit} data-testid="edit-conference-form">
