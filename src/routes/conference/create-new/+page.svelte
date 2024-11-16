@@ -1,7 +1,6 @@
 <script lang="ts">
-import {
-    goto
-} from '$app/navigation';
+import { goto } from '$app/navigation';
+import { user } from '$stores/userStore'
 let conferencePath: string | URL = "/conference";
 
   interface FormData {
