@@ -22,5 +22,5 @@ export class Conference {
 
 export function goToConferenceDetail(conference: Conference) {
     setConference( conference );
-    goto(`/conference/detail/`);
+    goto(`/conference/${conference.id}/`);
   }

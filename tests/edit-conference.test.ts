@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/svelte';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import EditConference from '../src/routes/conference/detail/+page.svelte';
+import EditConference from '../src/routes/conference/[id]/+page.svelte';
 import { goto } from '$app/navigation';
 
 // Mock dependencies
@@ -41,12 +41,12 @@ describe('EditConference', () => {
     Object.defineProperty(window, 'location', {
       writable: true,
       value: {
-        href: 'http://localhost/conference/edit?id=123',
+        href: 'http://localhost/conference/123',
         search: '?id=123',
         assign: vi.fn(),
         reload: vi.fn(),
         replace: vi.fn(),
-        toString: () => 'http://localhost/conference/edit?id=123',
+        toString: () => 'http://localhost/conference/123',
       },
     });
 
