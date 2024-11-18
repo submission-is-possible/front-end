@@ -1,8 +1,7 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
-  let conferencePath: string | URL = "/conference";
-  import { user } from '$stores/userStore';
-  import { setConference } from '$stores/conferenceStore';
+import { goto } from '$app/navigation';
+import { user } from '$stores/userStore'
+let conferencePath: string | URL = "/conference";
 
   interface FormData {
     title: string;
@@ -33,10 +32,12 @@
   }
 
   let formData: FormData = {
+
     title: '',
     admin_id: 0,
     deadline: formatDate(new Date()), // Imposta deadline come stringa formattata
     description: ''
+
   };
 
   let formInvitations: FormInvitations = {
@@ -44,32 +45,35 @@
     reviewers: []
   };
 
-  let errors: FormErrors = {};
-  let submitStatus: string = '';
 
-  function validateForm(): boolean {
+let errors: FormErrors = {};
+let submitStatus: string = '';
+
+function validateForm(): boolean {
     errors = {};
 
     if (!formData.title.trim()) {
-      errors.title = true;
+        errors.title = true;
     }
 
     if (!formData.description.trim()) {
-      errors.description = true;
+        errors.description = true;
     }
+
 
     if (new Date(formData.deadline) < new Date()) {
       errors.deadline = true;
+
     }
 
     return Object.keys(errors).length === 0;
-  }
+}
 
-  function gotoConference() {
+function gotoConference() {
     goto(conferencePath);
-  }
+}
 
-  async function handleSubmit(event: SubmitEvent): Promise<void> {
+async function handleSubmit(event: SubmitEvent): Promise < void > {
     event.preventDefault();
 
     if(!validateForm()) return;
@@ -80,9 +84,9 @@
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials:'include',
         body: JSON.stringify({
           title: formData.title,
-          admin_id: $user?.id,
           deadline: formData.deadline,
           description: formData.description,
           authors: formInvitations.authors,

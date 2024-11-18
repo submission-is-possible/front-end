@@ -1,48 +1,55 @@
+
 <script lang="ts">
   import type { PageData } from './$types';
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { user } from '$stores/userStore';
+  import { conference, setConference } from '$stores/conferenceStore'
   import { get } from 'svelte/store';
-  import type { Conference, ConferenceFormData } from '$lib/types';
-
+  //import type { ConferenceFormData } from '$lib/types';
+  import { Conference } from '$lib/models/conference';
   export let data: PageData;
 
-  let conference: Conference | null = null;
+  //let conference: Conference | null = null;
   let isEditing = false;
-  let isLoading = true;
+  let isLoading = false;
   let error: string | null = null;
   let isSubmitting = false;
   let currentUserId: number | null = null;
+
+  interface ConferenceFormData {
+    conference_id: Number;
+    title: String;
+    deadline: Date;
+    description: String;
+  }
 
   // Form data for editing
   let editFormData: ConferenceFormData = {
     conference_id: 0,
     title: '',
-    deadline: '',
-    description: '',
-    user_id: 0,
+    deadline: new Date,
+    description: ''
   };
 
 
   onMount(async () => {
     try {
-      currentUserId = get(user)?.id || null;
-      console.log('User store value:', get(user));
+      currentUserId = $user?.id || null;
+      console.log('User store value:', $user);
       console.log('currentUserId:', currentUserId);
       
-      conference = data.conference;
       console.log('conference:', conference);
       console.log('data:', data);
-      console.log('conference creator:', conference?.user_id);
+      console.log('conference creator:', $user?.id);
 
-      if (conference) {
+      if ($conference && $user) {
         editFormData = {
-          conference_id: conference.id,
-          title: conference.title,
-          deadline: formatDateForInput(conference.deadline),
-          description: conference.description,
-          user_id: conference.user_id // Assicurati che user_id sia presente
+          conference_id: $conference.id,
+          title: $conference.title,
+          deadline: $conference.deadline,
+          description: $conference.description//,
+          //user_id: $user.id // Assicurati che user_id sia presente
         };
       }
     } catch (err) {
@@ -53,16 +60,18 @@
     }
   });
 
-  function formatDateForInput(dateString: string): string {
-    const date = new Date(dateString);
+  function formatDateForInput(date:Date|undefined): string {
+    if (date == undefined) return'';
+    date = new Date(date);
     if (isNaN(date.getTime())) {
       return '';
     }
     return date.toISOString().split('T')[0];
   }
 
-  function formatDateForDisplay(dateString: string): string {
-    const date = new Date(dateString);
+  function formatDateForDisplay(date: Date|undefined): string {
+    if (date == undefined) return'';
+    date = new Date(date);
     if (isNaN(date.getTime())) {
       return 'Invalid date';
     }
@@ -83,13 +92,13 @@
 
       isSubmitting = true;
       const response = await fetch('http://localhost:8000/conference/delete/', {
-        method: 'POST',
+        method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials:'include',
         body: JSON.stringify({
-          conference_id: conference.id,
-          user_id: currentUserId,
+          conference_id: $conference?.id
         }),
       });
 
@@ -119,6 +128,7 @@
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials:'include',
         body: JSON.stringify(editFormData),
       });
 
@@ -126,12 +136,10 @@
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to update conference');
       }
+      
+      //const updatedConference = await response.json();
+      //setConference(updatedConference);
 
-      const updatedConference = await response.json();
-      conference = {
-        ...conference,
-        ...updatedConference,
-      };
       isEditing = false;
       error = null;
     } catch (err) {
@@ -165,7 +173,7 @@
     return true;
   }
 
-  $: canEditConference = conference && currentUserId && conference.user_id === currentUserId;
+  $: canEditConference = conference && currentUserId && $user?.id === currentUserId;
 </script>
 
 <div class="container mx-auto p-4 md:p-8">
@@ -174,7 +182,7 @@
     <button
       class="btn btn-ghost self-start"
       on:click={() => goto('/conference')}
-      data-testid="back-button">
+      data-testid="back-to-conferences-button">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
       </svg>
@@ -241,7 +249,7 @@
               <input 
                 id="deadline" 
                 type="date" 
-                bind:value={editFormData.deadline} 
+                bind:value={ editFormData.deadline } 
                 class="input input-bordered w-full"
                 data-testid="deadline-input"
               />
@@ -276,7 +284,7 @@
       <div class="card bg-base-100 shadow-xl">
         <div class="card-body">
           <div class="flex justify-between items-start mb-6">
-            <h2 class="card-title text-3xl">{conference.title}</h2>
+            <h2 class="card-title text-3xl">{$conference?.title}</h2>
             {#if canEditConference}
               <div class="flex gap-2">
                 <button 
@@ -310,20 +318,20 @@
           <div class="space-y-6">
             <div>
               <h3 class="text-xl font-semibold mb-3">Description</h3>
-              <p class="text-lg whitespace-pre-line">{conference.description}</p>
+              <p class="text-lg whitespace-pre-line">{$conference?.description}</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div class="card bg-base-200">
                 <div class="card-body">
                   <h3 class="card-title">Deadline</h3>
-                  <p class="text-lg">{formatDateForDisplay(conference.deadline)}</p>
+                  <p class="text-lg">{formatDateForDisplay($conference?.deadline)}</p>
                 </div>
               </div>
               <div class="card bg-base-200">
                 <div class="card-body">
                   <h3 class="card-title">Created</h3>
-                  <p class="text-lg">{formatDateForDisplay(conference.created_at)}</p>
+                  <p class="text-lg">{formatDateForDisplay($conference?.created_at)}</p>
                 </div>
               </div>
             </div>
