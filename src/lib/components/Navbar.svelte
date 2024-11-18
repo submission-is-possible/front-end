@@ -21,6 +21,7 @@
     {#if isLoggedin}
       <ul class="menu menu-horizontal px-1">
         <li><a href="/conference">Conference</a></li>
+        <li><a href="/notifications">Notifications</a></li>
         <li><a href="/reviews">Reviews</a></li>
         <li><a href="/submissions">Submissions</a></li>
       </ul>
