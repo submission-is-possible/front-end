@@ -25,11 +25,13 @@
               headers: {
                   'Content-Type': 'application/json',
               },
+              credentials:'include',
               body: JSON.stringify({
                   email: form.email,
                   password: form.password
               })
           });
+          
           debugger;
           const data = await response.json();
           console.log("data: " + data);

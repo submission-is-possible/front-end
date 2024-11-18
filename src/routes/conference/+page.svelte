@@ -1,26 +1,14 @@
 <script lang="ts">
   import { fade } from 'svelte/transition';
   import { onMount } from 'svelte';
+  import { Conference, goToConferenceDetail} from '$lib/models/conference';
+  import ConferenceCard from '$lib/components/ConferenceCard.svelte';
+  import { getRoleColor, getRoleAbbreviation } from '$lib/models/role';
+  import CreateItemButton from '$lib/components/CreateItemButton.svelte';
   import { goto } from '$app/navigation';
-  import { user } from '$stores/userStore';
-  import ConferenceCard from '../../lib/components/ConferenceCard.svelte';
 
-  interface Conference {
-    id: number;
-    title: string;
-    description: string;
-    created_at: string;
-    deadline: string;
-    roles: string[]; // Cambiato in array di stringhe
-    user_id: number;
-  }
-
-  function truncate(text: string, maxLength: number) {
+  function truncate(text: String, maxLength: number) {
     return text.length > maxLength ? text.slice(0, maxLength) + '...' : text;
-  }
-
-  function goToConferenceDetail(conferenceId: number) {
-    goto(`/conference/${conferenceId}/`);
   }
 
   let conferences: Conference[] = [];
@@ -33,15 +21,13 @@
   async function fetchConferences(page: number = 1) {
     try {
       const response = await fetch(`http://localhost:8000/conference_roles/get_user_conferences/?page=${page}&page_size=${pageSize}`, {
-        method: 'POST',
+        method: 'GET',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          user_id: $user?.id,
-        })
       });
-
+      debugger;
       if (!response.ok) throw new Error('Errore nel recupero delle conferenze');
 
       const data = await response.json();
@@ -73,26 +59,16 @@
     });
   }
 
-  
-// Funzione per determinare il colore del ruolo
-function getRoleColor(role: string) {
-    switch (role) {
-      case 'admin': return 'badge-error';
-      case 'author': return 'badge-info';
-      case 'reviewer': return 'badge-success';
-      default: return 'badge-ghost';
-    }
-  }
-
-  function getRoleAbbreviation(role: string) {
-    switch (role) {
-      case 'admin': return 'Ad';
-      case 'author': return 'Au';  // Per esempio, usa 'C' per contributor
-      case 'reviewer': return 'Re';
-      default: return '';
-    }
+  function onItemCreation(){
+    goto('/conference/create-new');
   }
 </script>
+
+<div class="p-4 flex flex-col justify-between">
+  <div class="flex justify-end">
+    <CreateItemButton onClick={onItemCreation}/>
+  </div>
+</div>
 
 <div class="container mx-auto p-4">
   <div class="flex justify-between items-center mb-6">
@@ -128,8 +104,8 @@ function getRoleColor(role: string) {
         </tr>
       </thead>
       <tbody>
-        {#each conferences as conference (conference.id)}
-          <tr class="hover" on:click={() => goToConferenceDetail(conference.id)} style="cursor: pointer;">
+        {#each conferences as conference}
+          <tr class="hover" on:click={() => goToConferenceDetail(conference)} style="cursor: pointer;">
             <td>{truncate(conference.title, 20)}</td>
             <td>{truncate(conference.description, 100)}</td>
             <td>
@@ -147,16 +123,7 @@ function getRoleColor(role: string) {
   {:else}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" transition:fade>
       {#each conferences as conference (conference.id)}
-        <ConferenceCard 
-          conference={{
-            id: conference.id,
-            title: conference.title,
-            description: conference.description,
-            role: conference.roles,  // Passa l'array di ruoli
-            deadline: formatDate(conference.deadline),
-            user_id: conference.user_id
-          }}
-        />
+        <ConferenceCard conference= {conference} />
       {/each}
     </div>
   {/if}
@@ -206,8 +173,7 @@ function getRoleColor(role: string) {
         </button>
       {/if}
     </div>
-  </div>  
-
+  </div>
 </div>
 
 <style>
