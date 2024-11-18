@@ -84,9 +84,9 @@ async function handleSubmit(event: SubmitEvent): Promise < void > {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials:'include',
         body: JSON.stringify({
           title: formData.title,
-          admin_id: $user?.id,
           deadline: formData.deadline,
           description: formData.description,
           authors: formInvitations.authors,

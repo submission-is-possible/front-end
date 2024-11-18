@@ -13,8 +13,8 @@ export class Conference {
     constructor(id: Number, title : String, created_at : Date, deadline: Date, description : String, roles:Role[]){
         this.id = id;
         this.title = title;
-        this.created_at = created_at;
-        this.deadline = deadline;
+        this.created_at = new Date(created_at);
+        this.deadline = new Date(deadline);
         this.description = description;
         this.roles = roles;
     }

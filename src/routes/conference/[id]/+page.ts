@@ -1,3 +1,4 @@
+/*
 import type { PageLoad } from './$types';
 import { user } from '$stores/userStore';
 import { get } from 'svelte/store';
@@ -24,3 +25,4 @@ export const load = (async ({ params, fetch }) => {
     conference,
   };
 }) satisfies PageLoad;
+*/
