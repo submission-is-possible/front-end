@@ -6,6 +6,7 @@
   let navItems = [
       { label: 'Conference', link: '/conference', visible: true },
       { label: 'Reviews', link: '/reviews', visible: true },
+      { label: 'Notifications', link: '/notifications', visible: true },
       { label: 'Submissions', link: '/submissions', visible: false}
     ];
 

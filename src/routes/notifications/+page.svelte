@@ -28,7 +28,7 @@
 
     async function fetchNotifications(page: number = 1) {
         try {
-            const response = await fetch(`http://localhost:8000/notifications/?page=${page}&page_size=${pageSize}`, {
+            const response = await fetch(`http://localhost:8000/notifications/get-notifications-received/?page=${page}&page_size=${pageSize}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
