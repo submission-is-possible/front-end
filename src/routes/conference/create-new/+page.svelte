@@ -221,7 +221,9 @@ async function handleSubmit(event: SubmitEvent): Promise < void > {
             class="btn btn-ghost btn-xs btn-circle"
             onclick={toggleInfoModal}
             aria-label="CSV format info">
-            <span class="text-sm">?</span>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h1m0-4h-1m1 8v2m-1 2a9 9 0 100-18 9 9 0 000 18z" />
+            </svg>
           </button>
         </div>
         <div class="form-control w-full">
@@ -271,8 +273,8 @@ async function handleSubmit(event: SubmitEvent): Promise < void > {
 
     <!-- CSV Info Modal -->
 {#if isInfoModalOpen}
-<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-  <div class="bg-white p-6 rounded-lg shadow-xl max-w-lg">
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  <div class="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
     <div class="flex justify-between items-start mb-4">
       <h3 class="text-lg font-bold">CSV File Format Instructions</h3>
       <button 
@@ -325,15 +327,16 @@ reviewer3@example.com</pre>
           </ul>
         </div>
       </div>
-        <div class="mt-6 flex justify-end">
-          <button 
-            class="btn btn-primary"
-            onclick={toggleInfoModal}>
-            Got it
-          </button>
-        </div>
+      <div class="mt-6 flex justify-end sticky bottom-0 bg-transparent pt-2">
+        <button 
+          class="btn btn-primary"
+          onclick={toggleInfoModal}>
+          Got it
+        </button>
       </div>
     </div>
+  </div>
+  
     {/if}
 
     <!-- Submit Error Message -->
