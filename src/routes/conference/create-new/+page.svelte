@@ -135,6 +135,12 @@ async function handleSubmit(event: SubmitEvent): Promise < void > {
       }
 
       submitStatus = 'success';
+
+      // Navigate to home/conference list after successful creation
+      setTimeout(() => {
+        goto(conferencePath);
+      }, 100);
+
     } catch (error) {
       submitStatus = 'error';
       errors.submit = 'Server Connection Error. Retry.';
@@ -247,7 +253,7 @@ async function handleSubmit(event: SubmitEvent): Promise < void > {
           <div class="max-h-64 overflow-y-auto border rounded-lg p-2 mb-2">
             {#each formInvitations.reviewers as reviewer, index}
               <div class="flex items-center mb-2 last:mb-0">
-                <input type="email" 
+                <input type="text" 
                   bind:value={reviewer.email} 
                   placeholder="Reviewer email"
                   class="input input-bordered w-full" 
