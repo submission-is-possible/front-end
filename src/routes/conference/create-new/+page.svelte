@@ -106,6 +106,11 @@ async function handleSubmit(event: SubmitEvent): Promise < void > {
 
     if(!validateForm()) return;
 
+    // Filter out empty or invalid emails
+    const validReviewers = formInvitations.reviewers.filter(reviewer => 
+        reviewer.email.trim() !== ''
+    );
+
     try {
       const response = await fetch('http://localhost:8000/conference/create/', {
         method: 'POST',
@@ -117,7 +122,7 @@ async function handleSubmit(event: SubmitEvent): Promise < void > {
           title: formData.title,
           deadline: formData.deadline,
           description: formData.description,
-          reviewers: formInvitations.reviewers
+          reviewers: validReviewers
         })
       });
 
