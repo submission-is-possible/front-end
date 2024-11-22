@@ -36,6 +36,8 @@
       totalPages = data.total_pages;
       totalConferences = data.total_conferences;
 
+      console.log('Conferenze:', conferences);
+
     } catch (error) {
       console.error('Errore:', error);
     }

@@ -16,6 +16,8 @@
   let error: string | null = null;
   let isSubmitting = false;
   let currentUserId: number | null = null;
+  let creatorId: number | null = null;
+  let adminData: any = null; 
 
   interface ConferenceFormData {
     conference_id: Number;
@@ -36,12 +38,14 @@
   onMount(async () => {
     try {
       currentUserId = $user?.id || null;
+      creatorId = $conference?.user_id ? Number($conference.user_id) : null;
       console.log('User store value:', $user);
       console.log('currentUserId:', currentUserId);
       
-      console.log('conference:', conference);
+
+      console.log('conference:', $conference);
+
       console.log('data:', data);
-      console.log('conference creator:', $user?.id);
 
       if ($conference && $user) {
         editFormData = {
@@ -59,6 +63,32 @@
       isLoading = false;
     }
   });
+
+  $: if (isAdmin) {
+    fetchAdminData();
+  }
+
+  async function fetchAdminData() {
+    try {
+      const response = await fetch('http://localhost:8000/admin/data/', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch admin data');
+      }
+
+      adminData = await response.json();
+      console.log('Admin data:', adminData);
+    } catch (err) {
+      console.error('Error fetching admin data:', err);
+      error = 'Failed to fetch admin data';
+    }
+  }
 
   function formatDateForInput(date:Date|undefined): string {
     if (date == undefined) return'';
@@ -173,7 +203,7 @@
     return true;
   }
 
-  $: canEditConference = conference && currentUserId && $user?.id === currentUserId;
+  $: isAdmin = conference && currentUserId && creatorId && currentUserId == creatorId;
 </script>
 
 <div class="container mx-auto p-4 md:p-8">
@@ -285,7 +315,7 @@
         <div class="card-body">
           <div class="flex justify-between items-start mb-6">
             <h2 class="card-title text-3xl">{$conference?.title}</h2>
-            {#if canEditConference}
+            {#if isAdmin}
               <div class="flex gap-2">
                 <button 
                   class="btn btn-primary"
@@ -336,6 +366,11 @@
               </div>
             </div>
           </div>
+          {#if isAdmin}
+            <div>
+              inserisci qui gli autori e di fianco i papers che hanno inviato
+            </div>
+          {/if}
         </div>
       </div>
     {/if}
