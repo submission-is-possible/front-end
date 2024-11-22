@@ -10,6 +10,14 @@
     return text.length > maxLength ? text.slice(0, maxLength) + '...' : text;
   }
 
+  function formatDate(dateStr: string | number | Date) {
+    return new Date(dateStr).toLocaleDateString('it-IT', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  }
+
 </script>
 
 <button class="card" on:click={() => goToConferenceDetail(conference)} aria-label="Conference details">
@@ -24,7 +32,9 @@
     {/each}
   </p>
   
-  <p><strong>Deadline:</strong> {conference.deadline}</p>
+  <p><strong>Deadline:</strong> {formatDate(conference.deadline)}</p>
+  <p><strong>Created:</strong> {formatDate(conference.created_at)}</p>
+
 </button>
 
 <style>
