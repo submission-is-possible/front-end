@@ -88,7 +88,7 @@ describe('Notifications Page', () => {
 
         // Controlla la chiamata a fetch
         expect(mockFetch).toHaveBeenCalledWith(
-            '/notifications/update-notification/',
+            'http://localhost:8000/notifications/update-notification/',
             expect.objectContaining({
                 method: 'PATCH',
                 body: JSON.stringify({ id_notification: 1, status: 'accept' }),
@@ -136,7 +136,7 @@ describe('Notifications Page', () => {
 
         // Controlla la chiamata a fetch
         expect(mockFetch).toHaveBeenCalledWith(
-            '/notifications/update-notification/',
+            'http://localhost:8000/notifications/update-notification/',
             expect.objectContaining({
                 method: 'PATCH',
                 body: JSON.stringify({ id_notification: 1, status: 'reject' }),

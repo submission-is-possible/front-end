@@ -3,51 +3,49 @@ import { goto } from '$app/navigation';
 import { user } from '$stores/userStore'
 let conferencePath: string | URL = "/conference";
 
-  interface FormData {
-    title: string;
-    admin_id: number;
-    deadline: string; // Cambiato a string per supportare il formato yyyy-MM-dd
-    description: string;
-  }
+interface FormData {
+  title: string;
+  admin_id: number;
+  deadline: string; // Cambiato a string per supportare il formato yyyy-MM-dd
+  description: string;
+}
 
-  interface FormInvitations {
-    authors: { email: string }[];
-    reviewers: { email: string }[];
-  }
+interface FormInvitations {
+  reviewers: { email: string }[];
+}
 
-  interface FormErrors {
-    title?: boolean;
-    admin_id?: boolean;
-    deadline?: boolean;
-    description?: boolean;
-    submit?: string;
-  }
+interface FormErrors {
+  title?: boolean;
+  admin_id?: boolean;
+  deadline?: boolean;
+  description?: boolean;
+  submit?: string;
+  csvFile?: string;
+}
 
-  // Funzione per formattare la data nel formato yyyy-MM-dd
-  function formatDate(date: Date): string {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  }
+// Funzione per formattare la data nel formato yyyy-MM-dd
+function formatDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 
-  let formData: FormData = {
+let formData: FormData = {
+  title: '',
+  admin_id: 0,
+  deadline: formatDate(new Date()), // Imposta deadline come stringa formattata
+  description: ''
+};
 
-    title: '',
-    admin_id: 0,
-    deadline: formatDate(new Date()), // Imposta deadline come stringa formattata
-    description: ''
-
-  };
-
-  let formInvitations: FormInvitations = {
-    authors: [],
-    reviewers: []
-  };
+let formInvitations: FormInvitations = {
+  reviewers: []
+};
 
 
 let errors: FormErrors = {};
 let submitStatus: string = '';
+let csvFile: File | null = null;
 
 function validateForm(): boolean {
     errors = {};
@@ -59,7 +57,6 @@ function validateForm(): boolean {
     if (!formData.description.trim()) {
         errors.description = true;
     }
-
 
     if (new Date(formData.deadline) < new Date()) {
       errors.deadline = true;
@@ -73,10 +70,46 @@ function gotoConference() {
     goto(conferencePath);
 }
 
+async function handleCsvUpload(event: Event) {
+  const input = event.target as HTMLInputElement;
+  if (input.files && input.files[0]) {
+    csvFile = input.files[0];
+    
+    // Create FormData object
+    const formData = new FormData();
+    formData.append('csv_file', csvFile);
+
+    try {
+      const response = await fetch('http://localhost:8000/conference/upload_reviewers_csv/', {
+        method: 'POST',
+        credentials: 'include',
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        errors.csvFile = data.error;
+        return;
+      }
+
+      // Add extracted emails to the reviewers list
+      formInvitations.reviewers = data.emails.map((email: string) => ({ email }));
+    } catch (error) {
+      errors.csvFile = 'Error processing CSV file';
+    }
+  }
+}
+
 async function handleSubmit(event: SubmitEvent): Promise < void > {
     event.preventDefault();
 
     if(!validateForm()) return;
+
+    // Filter out empty or invalid emails
+    const validReviewers = formInvitations.reviewers.filter(reviewer => 
+        reviewer.email.trim() !== ''
+    );
 
     try {
       const response = await fetch('http://localhost:8000/conference/create/', {
@@ -89,8 +122,7 @@ async function handleSubmit(event: SubmitEvent): Promise < void > {
           title: formData.title,
           deadline: formData.deadline,
           description: formData.description,
-          authors: formInvitations.authors,
-          reviewers: formInvitations.reviewers
+          reviewers: validReviewers
         })
       });
 
@@ -103,18 +135,32 @@ async function handleSubmit(event: SubmitEvent): Promise < void > {
       }
 
       submitStatus = 'success';
+
+      // Navigate to home/conference list after successful creation
+      setTimeout(() => {
+        goto(conferencePath);
+      }, 100);
+
     } catch (error) {
       submitStatus = 'error';
       errors.submit = 'Server Connection Error. Retry.';
     }
   }
 
-  function addEmail(role: 'authors' | 'reviewers') {
+  function addEmail(role: 'reviewers') {
     formInvitations[role] = [...formInvitations[role], { email: '' }];
   }
 
-  function removeEmail(role: 'authors' | 'reviewers', index: number) {
+  function removeEmail(role: 'reviewers', index: number) {
     formInvitations[role] = formInvitations[role].filter((_, i) => i !== index);
+  } 
+
+  //serve per gestire lo stato del modal (info del csv)
+  let isInfoModalOpen = false;
+
+  //per toggleare il modal
+  function toggleInfoModal() {
+    isInfoModalOpen = !isInfoModalOpen;
   }
 </script>
 
@@ -173,32 +219,131 @@ async function handleSubmit(event: SubmitEvent): Promise < void > {
     </div>
 
     <div class="grid grid-cols-2 gap-4">
-      <!-- Authors List -->
+      <!-- CSV Upload for Reviewers -->
       <div>
-        <h3 class="font-semibold mb-2">Authors</h3>
-        {#each formInvitations.authors as author, index}
-          <div class="flex items-center mb-2">
-            <input type="email" bind:value={author.email} placeholder="Author email"
-              class="input input-bordered w-full" data-testid="author-email-input"/>
-            <button type="button" class="btn btn-error ml-2" onclick={() => removeEmail('authors', index)}>Remove</button>
-          </div>
-        {/each}
-        <button type="button" class="btn btn-secondary mt-2" onclick={() => addEmail('authors')}>Add Author</button>
+        <div class="flex items-center gap-2 mb-2">
+          <h3 class="font-semibold">Upload Reviewers CSV</h3>
+          <button 
+            class="btn btn-ghost btn-xs btn-circle"
+            onclick={toggleInfoModal}
+            aria-label="CSV format info">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h1m0-4h-1m1 8v2m-1 2a9 9 0 100-18 9 9 0 000 18z" />
+            </svg>
+          </button>
+        </div>
+        <div class="form-control w-full">
+          <input 
+            type="file" 
+            accept=".csv"
+            class="file-input file-input-bordered w-full" 
+            onchange={handleCsvUpload}
+            data-testid="csv-upload-input"
+          />
+          {#if errors.csvFile}
+            <span class="label-text-alt text-error" role="alert">{errors.csvFile}</span>
+          {/if}
+        </div>
       </div>
 
-      <!-- Reviewers List -->
+      <!-- Reviewers List with scroll -->
       <div>
         <h3 class="font-semibold mb-2">Reviewers</h3>
-        {#each formInvitations.reviewers as reviewer, index}
-          <div class="flex items-center mb-2">
-            <input type="email" bind:value={reviewer.email} placeholder="Reviewer email"
-              class="input input-bordered w-full" data-testid="reviewer-email-input"/>
-            <button type="button" class="btn btn-error ml-2" onclick={() => removeEmail('reviewers', index)}>Remove</button>
+        <div class="relative">
+          <div class="max-h-64 overflow-y-auto border rounded-lg p-2 mb-2">
+            {#each formInvitations.reviewers as reviewer, index}
+              <div class="flex items-center mb-2 last:mb-0">
+                <input type="text" 
+                  bind:value={reviewer.email} 
+                  placeholder="Reviewer email"
+                  class="input input-bordered w-full" 
+                  data-testid="reviewer-email-input"/>
+                <button 
+                  type="button" 
+                  class="btn btn-error btn-sm ml-2" 
+                  onclick={() => removeEmail('reviewers', index)}>
+                  Remove
+                </button>
+              </div>
+            {/each}
           </div>
-        {/each}
-        <button type="button" class="btn btn-secondary mt-2" onclick={() => addEmail('reviewers')}>Add Reviewer</button>
+          <button 
+            type="button" 
+            class="btn btn-secondary w-full mt-2" 
+            onclick={() => addEmail('reviewers')}>
+            Add Reviewer
+          </button>
+        </div>
       </div>
     </div>
+
+    <!-- CSV Info Modal -->
+{#if isInfoModalOpen}
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  <div class="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+    <div class="flex justify-between items-start mb-4">
+      <h3 class="text-lg font-bold">CSV File Format Instructions</h3>
+      <button 
+        class="btn btn-sm btn-ghost"
+        onclick={toggleInfoModal}
+        aria-label="Close modal">
+        ✕
+      </button>
+    </div>
+    
+    <div class="space-y-4">
+      <div class="space-y-2">
+        <p class="font-semibold">How to create the CSV file:</p>
+        <ol class="list-decimal pl-5 space-y-2">
+          <li>Open Microsoft Excel</li>
+          <li>Create a single column with email addresses (one per row)</li>
+          <li>Do not include any headers or additional columns</li>
+          <li>Go to File → Save As</li>
+          <li>Choose "CSV (Comma delimited) (*.csv)" from the file type dropdown</li>
+          <li>Click Save</li>
+        </ol>
+      </div>
+
+      <div class="bg-gray-100 p-4 rounded-md">
+        <p class="font-semibold mb-2">Example CSV content:</p>
+        <pre class="text-sm">reviewer1@example.com
+reviewer2@example.com
+reviewer3@example.com</pre>
+      </div>
+      
+      <div class="space-y-2">
+        <p class="font-semibold">Important notes:</p>
+        <ul class="list-disc pl-5 space-y-1">
+          <li>Use simple CSV format (comma-delimited)</li>
+          <li>One email address per row</li>
+          <li>No headers, titles, or extra columns</li>
+          <li>No commas in the data</li>
+          <li>File must have .csv extension</li>
+          <li>UTF-8 encoding is preferred</li>
+        </ul>
+      </div>
+      
+      <div class="bg-yellow-50 p-3 rounded-md text-sm">
+          <p class="font-semibold text-yellow-800">Common issues to avoid:</p>
+          <ul class="list-disc pl-5 text-yellow-700">
+            <li>Don't use Excel's "Text to Columns" feature</li>
+            <li>Don't include column headers</li>
+            <li>Don't include quotation marks around emails</li>
+            <li>Don't use semicolons as separators</li>
+          </ul>
+        </div>
+      </div>
+      <div class="mt-6 flex justify-end sticky bottom-0 bg-transparent pt-2">
+        <button 
+          class="btn btn-primary"
+          onclick={toggleInfoModal}>
+          Got it
+        </button>
+      </div>
+    </div>
+  </div>
+  
+    {/if}
 
     <!-- Submit Error Message -->
     {#if submitStatus === 'error'}

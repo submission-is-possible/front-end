@@ -71,7 +71,7 @@
     async function handleNotificationAction(notificationId: number, status: 'accept' | 'reject') {
       try {
         // Effettua la chiamata al backend
-        const response = await fetch(`/notifications/update-notification/`, {
+        const response = await fetch(`http://localhost:8000/notifications/update-notification/`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
