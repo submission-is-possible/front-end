@@ -5,6 +5,9 @@
   import { goto } from '$app/navigation';
   import { user } from '$stores/userStore';
   import { conference, setConference } from '$stores/conferenceStore'
+  import {Role} from '$lib/models/role';
+  import { setPaper } from '$stores/paperStore';
+  import { Paper } from '$lib/models/paper';
   import { get } from 'svelte/store';
   //import type { ConferenceFormData } from '$lib/types';
   import { Conference } from '$lib/models/conference';
@@ -64,31 +67,112 @@
     }
   });
 
+  function handleRowClick(paper: Paper) {
+    setPaper(paper);
+    goto(`/paper/${paper.id}`);
+  }
+
   $: if (isAdmin) {
-    fetchAdminData();
+    loadPapers();
   }
 
-  async function fetchAdminData() {
-    try {
-      const response = await fetch('http://localhost:8000/admin/data/', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      });
+// Usa il tipo nella variabile
+let authorPapers: Paper[] = [];
+let visiblePapers: Paper[] = []; // Paper visibili nella pagina corrente
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch admin data');
+
+
+
+
+
+
+// Stato per la paginazione
+let currentPage: number = 1;
+let pageSize: number = 12; // Numero di paper per pagina
+let totalPages: number = 1;
+
+// Calcola i paper visibili in base alla pagina corrente
+$: visiblePapers = authorPapers.slice(
+  (currentPage - 1) * pageSize,
+  currentPage * pageSize
+);
+
+// Calcola il totale delle pagine
+$: totalPages = Math.ceil(authorPapers.length / pageSize);
+
+function goToPage(page: number) {
+  if (page >= 1 && page <= totalPages) {
+    currentPage = page;
+  }
+}
+
+// Mock dei dati
+$: if (isAdmin) {
+  loadPapers();
+}
+
+async function loadPapers() {
+  try {
+    authorPapers = await fetchAuthorsPapers();
+  } catch (err) {
+    console.error('Error loading papers:', err);
+    error = 'Failed to load papers. Please try again.';
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+  /* async function fetchAuthorsPapers() {
+      try {
+          const response = await fetch('http://localhost:8000/papers/author/', {
+              method: 'GET',
+              credentials: 'include',
+              headers: {
+                  'Content-Type': 'application/json',
+              },
+          });
+
+          if (!response.ok) {
+              throw new Error('Failed to fetch author papers');
+          }
+
+          const data = await response.json();
+          authorPapers = data.papers || [];
+          console.log('Author papers:', authorPapers);
+      } catch (err) {
+          console.error('Error fetching author papers:', err);
       }
+  } */
 
-      adminData = await response.json();
-      console.log('Admin data:', adminData);
-    } catch (err) {
-      console.error('Error fetching admin data:', err);
-      error = 'Failed to fetch admin data';
-    }
+  async function fetchAuthorsPapers(): Promise<Paper[]> {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const generatedPapers: Paper[] = Array.from({ length: 40 }, (_, i) => ({
+          id: i + 1,
+          title: `Paper Title ${i + 1}`,
+          author: `AuthorName${i + 1}`,
+          paper_file: `file${i + 1}.pdf`,
+          conference: Number($conference?.id ?? 0), // Ensure conference is a number
+          conference_title: String($conference?.title ?? ''),
+          status: 'submitted',
+          created_at: new Date().toISOString()
+        }));
+        resolve(generatedPapers);
+      }, 1000);
+    });
   }
+
+
 
   function formatDateForInput(date:Date|undefined): string {
     if (date == undefined) return'';
@@ -206,7 +290,7 @@
   $: isAdmin = conference && currentUserId && creatorId && currentUserId == creatorId;
 </script>
 
-<div class="container mx-auto p-4 md:p-8">
+<div class="container mx-auto p-2 md:p-4">
   <!-- Header -->
   <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
     <button
@@ -366,10 +450,90 @@
               </div>
             </div>
           </div>
-          {#if isAdmin}
-            <div>
-              inserisci qui gli autori e di fianco i papers che hanno inviato
+
+          {#if isAdmin} <!-- mostra i papers se si entra come program chair -->
+            <div class="mt-8">
+              <h3 class="text-xl font-semibold mb-4">Submitted Papers</h3>
+              {#if authorPapers.length > 0}
+                <div class="overflow-x-auto">
+                  <table class="table table-zebra w-full">
+                    <thead>
+                      <tr>
+                        <th>Paper ID</th>
+                        <th>Author</th>
+                        <th>Title</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {#each visiblePapers as paper}
+                        <tr class="hover" on:click={() => handleRowClick(paper)} style="cursor: pointer;">
+                          <td>{paper.id}</td>
+                          <td>{paper.author}</td>
+                          <td>{paper.title}</td>
+                          <td>{paper.status}</td>
+                        </tr>
+                      {/each}
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- Pagination Controls -->
+                <div class="flex justify-center mt-6">
+                  <div class="join">
+                    <!-- Primo pulsante -->
+                    {#if currentPage > 2}
+                      <button class="join-item btn" on:click={() => goToPage(1)}>1</button>
+                    {/if}
+
+                    <!-- Ellissi -->
+                    {#if currentPage > 3}
+                      <button class="join-item btn btn-disabled">...</button>
+                    {/if}
+
+                    <!-- Pagina precedente -->
+                    {#if currentPage > 1}
+                      <button class="join-item btn" on:click={() => goToPage(currentPage - 1)}>
+                        {currentPage - 1}
+                      </button>
+                    {/if}
+
+                    <!-- Pagina corrente -->
+                    <button class="join-item btn btn-active">{currentPage}</button>
+
+                    <!-- Pagina successiva -->
+                    {#if currentPage < totalPages}
+                      <button class="join-item btn" on:click={() => goToPage(currentPage + 1)}>
+                        {currentPage + 1}
+                      </button>
+                    {/if}
+
+                    <!-- Ellissi -->
+                    {#if currentPage < totalPages - 2}
+                      <button class="join-item btn btn-disabled">...</button>
+                    {/if}
+
+                    <!-- Ultima pagina -->
+                    {#if totalPages > 1 && currentPage < totalPages - 1}
+                      <button class="join-item btn" on:click={() => goToPage(totalPages)}>
+                        {totalPages}
+                      </button>
+                    {/if}
+                  </div>
+                </div>
+              {:else}
+                <p class="mt-8">No papers submitted.</p>
+              {/if}
             </div>
+          {/if}
+
+
+
+          {#if $conference?.roles.includes(Role.Author)} <!-- mostra la pagina per gli autori autore-->
+            se mi vedi sei un autore
+          {/if}
+          {#if $conference?.roles.includes(Role.Reviewer)}<!-- mostra la pagina per i reviewers reviewer-->
+            se mi vedi sei un reviewer
           {/if}
         </div>
       </div>

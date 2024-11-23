@@ -7,6 +7,7 @@ import { user } from '$stores/userStore';
 import { get } from 'svelte/store';
 import { Conference } from '$lib/models/conference';
 import { Role } from '$lib/models/role';
+import { conference } from '$stores/conferenceStore';
 
 vi.mock('$app/navigation', () => ({
   goto: vi.fn()
@@ -18,7 +19,8 @@ const mockConference : Conference = {
   description: 'Test Description',
   created_at: new Date,
   deadline: new Date,
-  roles: [Role.Admin]
+  roles: [Role.Admin],
+  user_id: 1
 };
 
 const mockUser = {
@@ -32,6 +34,7 @@ describe('Conference Detail Page', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     user.set(mockUser);
+    conference.set(mockConference);
     global.fetch = vi.fn();
     global.confirm = vi.fn(() => true);
   });
