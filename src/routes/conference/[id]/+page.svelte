@@ -97,6 +97,13 @@ $: visiblePapers = authorPapers.slice(
   currentPage * pageSize
 );
 
+
+
+
+
+// vvvvvvvvvvvvv CODICE PER MOCKARE LA PAGINA, è DA MODIFICARE UNA VOLTA FATTO IL BACKEND!!!! vvvvvvvvv
+
+
 // Calcola il totale delle pagine
 $: totalPages = Math.ceil(authorPapers.length / pageSize);
 
@@ -119,18 +126,6 @@ async function loadPapers() {
     error = 'Failed to load papers. Please try again.';
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
   /* async function fetchAuthorsPapers() {
       try {
@@ -171,6 +166,12 @@ async function loadPapers() {
       }, 1000);
     });
   }
+
+
+
+
+  // ^^^^^^^^^ CODICE PER MOCKARE LA PAGINA, è DA MODIFICARE UNA VOLTA FATTO IL BACKEND!!!! ^^^^^^^^^^
+
 
 
 
