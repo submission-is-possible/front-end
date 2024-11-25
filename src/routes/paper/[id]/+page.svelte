@@ -177,7 +177,11 @@
     let showModal = false; // Controlla la visibilità del modale
     const eventDispatcher = createEventDispatcher(); // Per comunicare con il componente genitore
 
-    async function submitEvaluation() {
+
+
+    // vvvvvvvvvvv queste due funzioni sono ugauli perchè non so come chiamare il back end ma avranno poi due chiamate diverse vvvvvvvvvvv
+
+    async function submitEvaluationReviewer() {
         try {
             if (!$paper) {
                 throw new Error('Paper non trovato nel store!');
@@ -204,12 +208,46 @@
         }
     }
 
+    async function submitEvaluationAdmin() {
+        try {
+            if (!$paper) {
+                throw new Error('Paper non trovato nel store!');
+            }
+            const response = await fetch(`http://localhost:8000/papers/${$paper.id}/evaluate`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ evaluation }),
+            });
+
+            if (!response.ok) {
+                throw new Error(`Errore nella richiesta: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            eventDispatcher('evaluationSubmitted', { detail: data }); // Notifica al genitore
+        } catch (error) {
+            console.error('Errore nell\'invio della valutazione:', error);
+        } finally {
+            showModal = false; // Nascondi il modale
+        }
+    }
+
+    // ^^^^^^^^^^^^^^^ queste due funzioni sono ugauli perchè non so come chiamare il back end ma avranno poi due chiamate diverse ^^^^^^^^^^^^^^^^
+
+
+
+
+
     function dispatch(eventName: string, detail: any) {
         // Utilizzo di `dispatchEvent` direttamente
         const event = new CustomEvent(eventName, { detail });
         dispatchEvent(event);
     }
 
+    
 
 
 
@@ -265,7 +303,11 @@
                 </div>
             {/if}
 
-            <div class="divider">Evaluation</div>
+            {#if $conference?.roles.includes(Role.Admin)}
+            <div class="divider">Chair Evaluation</div>
+            {:else if $conference?.roles.includes(Role.Reviewer)}
+            <div class="divider">Reviewer Evaluation</div>
+            {/if}
             <div class="flex items-center justify-center space-x-4 mt-4">
                 <!-- Pulsanti di selezione -->
                 <button
@@ -290,8 +332,12 @@
                             Are you sure you want to evaluate this paper as <strong>{evaluation}</strong>?
                         </p>
                         <div class="modal-action">
-                            <button class="btn btn-success" on:click={submitEvaluation}>Conferma</button>
-                            <button class="btn btn-outline" on:click={() => { showModal = false; }}>Annulla</button>
+                            {#if $conference?.roles.includes(Role.Admin)}
+                                <button class="btn btn-success" on:click={submitEvaluationAdmin}>Confirm Evaluation</button>
+                            {:else if $conference?.roles.includes(Role.Reviewer)}
+                                <button class="btn btn-success" on:click={submitEvaluationReviewer}>Confirm Review</button>
+                            {/if}
+                            <button class="btn btn-outline" on:click={() => { showModal = false; }}>Cancel</button>
                         </div>
                     </div>
                 </div>
