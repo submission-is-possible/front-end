@@ -3,11 +3,11 @@
   import type { PageData } from './$types';
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
+  import { paper, setPaper } from '$stores/paperStore';
   import { user } from '$stores/userStore';
   import { conference, setConference } from '$stores/conferenceStore'
   import {Role} from '$lib/models/role';
-  import { setPaper } from '$stores/paperStore';
-  import { Paper } from '$lib/models/paper';
+  import { Paper, goToPaperDetail } from '$lib/models/paper';
   import { get } from 'svelte/store';
   //import type { ConferenceFormData } from '$lib/types';
   import { Conference } from '$lib/models/conference';
@@ -66,11 +66,6 @@
       isLoading = false;
     }
   });
-
-  function handleRowClick(paper: Paper) {
-    setPaper(paper);
-    goto(`/paper/${paper.id}`);
-  }
 
   $: if (isAdmin) {
     loadPapers();
@@ -468,7 +463,7 @@ async function loadPapers() {
                     </thead>
                     <tbody>
                       {#each visiblePapers as paper}
-                        <tr class="hover" on:click={() => handleRowClick(paper)} style="cursor: pointer;">
+                        <tr class="hover" on:click={() => goToPaperDetail(paper)} style="cursor: pointer;">
                           <td>{paper.id}</td>
                           <td>{paper.author}</td>
                           <td>{paper.title}</td>

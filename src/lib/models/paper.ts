@@ -1,3 +1,6 @@
+import { goto } from '$app/navigation';
+import { setPaper } from '$stores/paperStore';
+
 export class Paper {
     id: number;
     title: string;
@@ -18,4 +21,10 @@ export class Paper {
         this.status = status;
         this.created_at = created_at;
     }
+}
+
+// Funzione aggiornata per settare il paper e navigare alla pagina di dettaglio
+export async function goToPaperDetail(paper: Paper) {
+    setPaper(paper);
+    await goto(`/paper/${paper.id}/`);
 }
