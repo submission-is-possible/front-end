@@ -109,13 +109,14 @@ function goToPage(page: number) {
 }
 
 // Mock dei dati
-$: if (isAdmin) {
+$: if (isAdmin || $conference?.roles.includes(Role.Reviewer)) {
   loadPapers();
 }
 
 async function loadPapers() {
   try {
     authorPapers = await fetchAuthorsPapers();
+    //genera i paper
   } catch (err) {
     console.error('Error loading papers:', err);
     error = 'Failed to load papers. Please try again.';
@@ -447,7 +448,7 @@ async function loadPapers() {
             </div>
           </div>
 
-          {#if isAdmin} <!-- mostra i papers se si entra come program chair -->
+          {#if isAdmin || $conference?.roles.includes(Role.Reviewer)} <!-- mostra i papers se si entra come program chair -->
             <div class="mt-8">
               <h3 class="text-xl font-semibold mb-4">Submitted Papers</h3>
               {#if authorPapers.length > 0}

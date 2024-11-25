@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { PageData } from './$types';
-  import { onMount } from 'svelte';
+  import { onMount, createEventDispatcher } from 'svelte';
   import { goto } from '$app/navigation';
   import { paper, setPaper } from '$stores/paperStore';
   import { user } from '$stores/userStore';
@@ -173,6 +173,42 @@
 
 
 
+    let evaluation: 'accepted' | 'rejected' | null = null; // Valutazione selezionata ("accepted" o "rejected")
+    let showModal = false; // Controlla la visibilità del modale
+    const eventDispatcher = createEventDispatcher(); // Per comunicare con il componente genitore
+
+    async function submitEvaluation() {
+        try {
+            if (!$paper) {
+                throw new Error('Paper non trovato nel store!');
+            }
+            const response = await fetch(`http://localhost:8000/papers/${$paper.id}/evaluate`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ evaluation }),
+            });
+
+            if (!response.ok) {
+                throw new Error(`Errore nella richiesta: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            eventDispatcher('evaluationSubmitted', { detail: data }); // Notifica al genitore
+        } catch (error) {
+            console.error('Errore nell\'invio della valutazione:', error);
+        } finally {
+            showModal = false; // Nascondi il modale
+        }
+    }
+
+    function dispatch(eventName: string, detail: any) {
+        // Utilizzo di `dispatchEvent` direttamente
+        const event = new CustomEvent(eventName, { detail });
+        dispatchEvent(event);
+    }
 
 
 
@@ -228,6 +264,39 @@
                     <span>Caricamento dettagli del paper...</span>
                 </div>
             {/if}
+
+            <div class="divider">Evaluation</div>
+            <div class="flex items-center justify-center space-x-4 mt-4">
+                <!-- Pulsanti di selezione -->
+                <button
+                    class="btn btn-outline btn-success"
+                    on:click={() => { evaluation = 'accepted'; showModal = true; }}>
+                    Accept
+                </button>
+                <button
+                    class="btn btn-outline btn-error"
+                    on:click={() => { evaluation = 'rejected'; showModal = true; }}>
+                    Reject
+                </button>
+            </div>
+
+            
+            <!-- Modale di conferma -->
+            {#if showModal}
+                <div class="modal modal-open">
+                    <div class="modal-box">
+                        <h3 class="font-bold text-lg">Confirm Evaluation</h3>
+                        <p class="py-4">
+                            Are you sure you want to evaluate this paper as <strong>{evaluation}</strong>?
+                        </p>
+                        <div class="modal-action">
+                            <button class="btn btn-success" on:click={submitEvaluation}>Conferma</button>
+                            <button class="btn btn-outline" on:click={() => { showModal = false; }}>Annulla</button>
+                        </div>
+                    </div>
+                </div>
+            {/if}
+
         
             <div class="divider">Revisori</div>
         
@@ -260,24 +329,25 @@
                     </tbody>
                 </table>
             </div>
-        
-            <div class="form-control mt-6">
-                <label class="label" for="newReviewerEmail">
-                    <span class="label-text">Aggiungi Revisore</span>
-                </label>
-                <div class="flex gap-4">
-                    <input
-                        type="email"
-                        id="newReviewerEmail"
-                        placeholder="Email revisore"
-                        bind:value={newReviewerEmail}
-                        class="input input-bordered flex-1"
-                    />
-                    <button class="btn btn-secondary" on:click={addReviewer}>
-                        Aggiungi
-                    </button>
+            {#if $conference?.roles.includes(Role.Admin)}
+                <div class="form-control mt-6">
+                    <label class="label" for="newReviewerEmail">
+                        <span class="label-text">Aggiungi Revisore</span>
+                    </label>
+                    <div class="flex gap-4">
+                        <input
+                            type="email"
+                            id="newReviewerEmail"
+                            placeholder="Email revisore"
+                            bind:value={newReviewerEmail}
+                            class="input input-bordered flex-1"
+                        />
+                        <button class="btn btn-secondary" on:click={addReviewer}>
+                            Aggiungi
+                        </button>
+                    </div>
                 </div>
-            </div>
+            {/if}
         
             <div class="divider">Commenti</div>
         
