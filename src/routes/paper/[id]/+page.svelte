@@ -181,55 +181,49 @@
 
     // vvvvvvvvvvv queste due funzioni sono ugauli perchè non so come chiamare il back end ma avranno poi due chiamate diverse vvvvvvvvvvv
 
-    async function submitEvaluationReviewer() {
-        try {
-            if (!$paper) {
-                throw new Error('Paper non trovato nel store!');
-            }
-            const response = await fetch(`http://localhost:8000/papers/${$paper.id}/evaluate`, {
-                method: 'POST',
-                credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ evaluation }),
-            });
-
-            if (!response.ok) {
-                throw new Error(`Errore nella richiesta: ${response.statusText}`);
-            }
-
-            const data = await response.json();
-            eventDispatcher('evaluationSubmitted', { detail: data }); // Notifica al genitore
-        } catch (error) {
-            console.error('Errore nell\'invio della valutazione:', error);
-        } finally {
-            showModal = false; // Nascondi il modale
-        }
+    async function submitEvaluationReviewer(evaluation : string) {
+        //chiamata al back per creare/aggiornare la review
     }
 
-    async function submitEvaluationAdmin() {
+    async function submitEvaluationAdmin(evaluation : string) {
+        console.log("Cookie presenti nel browser:", document.cookie);
         try {
-            if (!$paper) {
-                throw new Error('Paper non trovato nel store!');
-            }
-            const response = await fetch(`http://localhost:8000/papers/${$paper.id}/evaluate`, {
-                method: 'POST',
-                credentials: 'include',
+            const response = await fetch('http://localhost:8000/papers/update_status/', {
+                method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ evaluation }),
+                credentials: 'include', // Necessario per includere il cookie CSRF, se richiesto
+                body: JSON.stringify({
+                    paper_id: $paper?.id,
+                    status: evaluation,
+                }),
             });
 
             if (!response.ok) {
-                throw new Error(`Errore nella richiesta: ${response.statusText}`);
+                // Gestione degli errori
+                if (response.status === 403) {
+                    throw new Error('Non sei autorizzato a modificare questo paper.');
+                }
+                if (response.status === 404) {
+                    throw new Error('Paper non trovato o utente non è parte della conferenza.');
+                }
+                if (response.status === 400) {
+                    throw new Error('Richiesta non valida. Controlla i dati inviati.');
+                }
+                throw new Error('Errore nella richiesta.');
             }
 
             const data = await response.json();
-            eventDispatcher('evaluationSubmitted', { detail: data }); // Notifica al genitore
+            console.log('Aggiornamento riuscito:', data.message);
+            alert('Lo stato del paper è stato aggiornato con successo!');
         } catch (error) {
-            console.error('Errore nell\'invio della valutazione:', error);
+            console.error('Errore durante l\'aggiornamento:', error);
+            if (error instanceof Error) {
+                alert(error.message || 'Errore durante l\'aggiornamento dello stato del paper.');
+            } else {
+                alert('Errore durante l\'aggiornamento dello stato del paper.');
+            }
         } finally {
             showModal = false; // Nascondi il modale
         }
@@ -333,9 +327,9 @@
                         </p>
                         <div class="modal-action">
                             {#if $conference?.roles.includes(Role.Admin)}
-                                <button class="btn btn-success" on:click={submitEvaluationAdmin}>Confirm Evaluation</button>
+                                <button class="btn btn-success" on:click={() => evaluation && submitEvaluationAdmin(evaluation)}>Confirm Evaluation</button>
                             {:else if $conference?.roles.includes(Role.Reviewer)}
-                                <button class="btn btn-success" on:click={submitEvaluationReviewer}>Confirm Review</button>
+                                <button class="btn btn-success" on:click={() => evaluation && submitEvaluationReviewer(evaluation)}>Confirm Review</button>
                             {/if}
                             <button class="btn btn-outline" on:click={() => { showModal = false; }}>Cancel</button>
                         </div>
