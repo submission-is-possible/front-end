@@ -179,7 +179,6 @@
 
 
 
-    // vvvvvvvvvvv queste due funzioni sono ugauli perchè non so come chiamare il back end ma avranno poi due chiamate diverse vvvvvvvvvvv
 
     async function submitEvaluationReviewer(evaluation : string) {
         //chiamata al back per creare/aggiornare la review
@@ -197,6 +196,7 @@
                 body: JSON.stringify({
                     paper_id: $paper?.id,
                     status: evaluation,
+                    user_id: $user?.id,
                 }),
             });
 
@@ -229,7 +229,6 @@
         }
     }
 
-    // ^^^^^^^^^^^^^^^ queste due funzioni sono ugauli perchè non so come chiamare il back end ma avranno poi due chiamate diverse ^^^^^^^^^^^^^^^^
 
 
 
@@ -299,9 +298,6 @@
 
             {#if $conference?.roles.includes(Role.Admin)}
             <div class="divider">Chair Evaluation</div>
-            {:else if $conference?.roles.includes(Role.Reviewer)}
-            <div class="divider">Reviewer Evaluation</div>
-            {/if}
             <div class="flex items-center justify-center space-x-4 mt-4">
                 <!-- Pulsanti di selezione -->
                 <button
@@ -315,6 +311,35 @@
                     Reject
                 </button>
             </div>
+            {:else if $conference?.roles.includes(Role.Reviewer)}
+            <div class="divider">Reviewer Evaluation</div>
+            <div class="flex flex-col items-center space-y-4 mt-4">
+                <!-- Label -->
+                <label for="score" class="font-semibold">Score (0-5):</label>
+
+                <!-- Barra di selezione -->
+                <input
+                type="range"
+                id="score"
+                min="0"
+                max="5"
+                step="1"
+                class="range range-primary w-64"
+                bind:value={evaluation}
+                />
+
+                <!-- Visualizzazione del punteggio selezionato -->
+                <p class="text-lg font-bold">Selected Score: {evaluation}</p>
+
+                <!-- Pulsante di conferma -->
+                <button
+                class="btn btn-outline btn-primary"
+                on:click={() => { evaluation = evaluation; showModal = true; }}>
+                Submit Score
+                </button>
+            </div>
+            {/if}
+            
 
             
             <!-- Modale di conferma -->

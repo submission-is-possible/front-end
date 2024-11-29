@@ -504,7 +504,7 @@ function goToReviewerPage(page: number) {
           {#if isAdmin} <!-- mostra i papers se si entra come program chair -->
             <div class="mt-8">
               <h3 class="text-xl font-semibold mb-4">Submitted Papers</h3>
-              {#if AdminPapers.length > 0}
+              {#if AdminPapers && AdminPapers.length > 0}
                 <div class="overflow-x-auto">
                   <table class="table table-zebra w-full">
                     <thead>
