@@ -1,6 +1,6 @@
 export enum Role{
     Admin = "admin",
-    Author = " author",
+    Author = "author",
     Reviewer = "reviewer"
 }
 
@@ -16,7 +16,7 @@ export function getRoleColor(role: Role) {
 export function getRoleAbbreviation(role: Role) {
     switch (role) {
       case Role.Admin: return 'Ad';
-      case Role.Author: return 'Au';  // Per esempio, usa 'C' per contributor
+      case Role.Author: return 'Au';
       case Role.Reviewer: return 'Re';
       default: return '';
     }

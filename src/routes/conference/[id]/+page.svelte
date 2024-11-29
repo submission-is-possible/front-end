@@ -577,9 +577,16 @@ function goToReviewerPage(page: number) {
             </div>
           {/if}
 
-          {#if $conference?.roles.includes(Role.Author) || $conference?.roles.includes(Role.Reviewer)} <!-- mostra la pagina per gli autori autore-->
+          {#if $conference && $conference.roles && $conference.roles?.includes(Role.Author)} <!-- mostra la pagina per gli autori autore-->
             <div class="mt-8">
               <h3 class="text-xl font-semibold mb-4">Papers submitted by You</h3>
+              <div class="mb-4">
+                <button
+                  class="btn btn-primary"
+                  on:click={() => goto('/conference/submissions/submit')}>
+                  Submit a New Paper
+                </button>
+              </div>
               {#if AuthorPapers.length > 0}
                 <div class="overflow-x-auto">
                   <table class="table table-zebra w-full">
@@ -653,7 +660,7 @@ function goToReviewerPage(page: number) {
             </div>
           {/if}
 
-          {#if $conference?.roles.includes(Role.Reviewer)}<!-- mostra la pagina per i reviewers reviewer-->
+          {#if $conference?.roles?.includes(Role.Reviewer)}<!-- mostra la pagina per i reviewers reviewer-->
             <div class="mt-8">
               <h3 class="text-xl font-semibold mb-4">Papers to review</h3>
               {#if ReviewerPapers.length > 0}

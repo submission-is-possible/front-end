@@ -4,7 +4,7 @@
     import { getRoleColor, getRoleAbbreviation } from '$lib/models/role';
     import { user } from '$stores/userStore';
     import ConferenceCard from '$lib/components/ConferenceCard.svelte';
-    import { fade } from 'svelte/transition';
+    import { fly, fade } from 'svelte/transition';
 
     let conferences: Conference[] = [];
     let currentPage = 1;
@@ -40,6 +40,51 @@
         fetchConferences(currentPage);
     });
 
+    let successToast = false;
+
+    async function joinConference(conference : Conference) {
+      console.log("chiamata join conference");
+      try {
+        const response = await fetch(`http://localhost:8000/conference_roles/assign_author_role/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id_user: $user?.id,
+          id_conference: conference?.id
+        })
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error("Not found.");
+        }
+        if (response.status === 400) {
+          throw new Error("Missing fields.");
+        }
+        if (response.status === 405) {
+          throw new Error("Only POST requests are allowed.");
+        }
+        throw new Error("Errore nella richiesta.");
+      }
+
+      const data = await response.json();
+      console.log("Unione avvenuta con successo:", data);
+
+      // Mostra il messaggio toast
+      successToast = true;
+      
+      // Nasconde il messaggio dopo 3 secondi
+      setTimeout(() => {
+        successToast = false;
+      }, 3000);
+
+    } catch (error) {
+      console.error('Errore:', error);
+    }
+  }
+
     function goToPage(page: number) {
         if (page >= 1 && page <= totalPages) {
             fetchConferences(page);
@@ -64,6 +109,22 @@
         }
     }
 </script>
+
+<!-- Toast per il messaggio di successo -->
+{#if successToast}
+  <div 
+    class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50"
+    in:fly="{{ y: -20 }}" out:fade>
+    <div class="alert shadow-lg w-96 transition-colors duration-300" data-theme="{document.documentElement.getAttribute('data-theme')}">
+      <div>
+        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m-6 4h10" />
+        </svg>
+        <span>You have successfully joined the conference!</span>
+      </div>
+    </div>
+  </div>
+{/if}
 {#if $user?.isLoggedin}
   <div class="container mx-auto p-4">
     <div class="flex justify-between items-center mb-6">
@@ -102,7 +163,7 @@
         </thead>
         <tbody>
           {#each conferences as conference}
-            <tr class="hover" on:click={() => goToConferenceDetail(conference)} style="cursor: pointer;">
+            <tr class="hover" on:click={() => joinConference(conference)} style="cursor: pointer;">
               <td>{truncate(conference.title, 20)}</td>
               <td>{truncate(conference.description, 100)}</td>
               <td>{formatDate(conference.created_at)}</td>
