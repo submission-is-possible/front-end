@@ -16,6 +16,7 @@
     let canEdit = false;
     let isLoading = true;
     let error: string | null = null;
+    let reviewText = '';
     let isSubmitting = false;
     let currentUserId: number | null = null;
     let creatorId: number | null = null;
@@ -181,11 +182,52 @@
 
 
     async function submitEvaluationReviewer(evaluation : string) {
-        //chiamata al back per creare/aggiornare la review
+        
+        try {
+            const response = await fetch('http://localhost:8000/reviews/create_review/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include', // Necessario per includere il cookie CSRF, se richiesto
+                body: JSON.stringify({
+                    paper_id: $paper?.id,
+                    user_id: $user?.id,
+                    comment_text: reviewText,
+                    score: evaluation,
+                }),
+            });
+
+            if (!response.ok) {
+                // Gestione degli errori
+                if (response.status === 403) {
+                    throw new Error('Non sei autorizzato a modificare questa review.');
+                }
+                if (response.status === 404) {
+                    throw new Error('Paper non trovato o utente non è parte della conferenza.');
+                }
+                if (response.status === 400) {
+                    throw new Error('Richiesta non valida. Controlla i dati inviati.');
+                }
+                throw new Error('Errore nella richiesta.');
+            }
+
+            const data = await response.json();
+            console.log('Aggiornamento riuscito:', data.message);
+            alert('Lo stato della review è stato aggiornato con successo!');
+        } catch (error) {
+            console.error('Errore durante l\'aggiornamento:', error);
+            if (error instanceof Error) {
+                alert(error.message || 'Errore durante l\'aggiornamento dello stato della review.');
+            } else {
+                alert('Errore durante l\'aggiornamento dello stato della review.');
+            }
+        } finally {
+            showModal = false; // Nascondi il modale
+        }
     }
 
     async function submitEvaluationAdmin(evaluation : string) {
-        console.log("Cookie presenti nel browser:", document.cookie);
         try {
             const response = await fetch('http://localhost:8000/papers/update_status/', {
                 method: 'PATCH',
@@ -330,6 +372,19 @@
 
                 <!-- Visualizzazione del punteggio selezionato -->
                 <p class="text-lg font-bold">Selected Score: {evaluation}</p>
+
+                <!-- Recensione scritta -->
+                <div class="form-control w-full max-w-md">
+                    <label class="label" for="reviewText">
+                        <span class="label-text font-semibold">Write your review</span>
+                    </label>
+                    <textarea
+                        id="reviewText"
+                        class="textarea textarea-bordered h-24"
+                        placeholder="Enter your review here"
+                        bind:value={reviewText}>
+                    </textarea>
+                </div>
 
                 <!-- Pulsante di conferma -->
                 <button
