@@ -16,6 +16,7 @@
     let canEdit = false;
     let isLoading = true;
     let error: string | null = null;
+    let reviewText = '';
     let isSubmitting = false;
     let currentUserId: number | null = null;
     let creatorId: number | null = null;
@@ -179,63 +180,97 @@
 
 
 
-    // vvvvvvvvvvv queste due funzioni sono ugauli perchè non so come chiamare il back end ma avranno poi due chiamate diverse vvvvvvvvvvv
 
-    async function submitEvaluationReviewer() {
+    async function submitEvaluationReviewer(evaluation : string) {
+        
         try {
-            if (!$paper) {
-                throw new Error('Paper non trovato nel store!');
-            }
-            const response = await fetch(`http://localhost:8000/papers/${$paper.id}/evaluate`, {
+            const response = await fetch('http://localhost:8000/reviews/create_review/', {
                 method: 'POST',
-                credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ evaluation }),
+                credentials: 'include', // Necessario per includere il cookie CSRF, se richiesto
+                body: JSON.stringify({
+                    paper_id: $paper?.id,
+                    user_id: $user?.id,
+                    comment_text: reviewText,
+                    score: evaluation,
+                }),
             });
 
             if (!response.ok) {
-                throw new Error(`Errore nella richiesta: ${response.statusText}`);
+                // Gestione degli errori
+                if (response.status === 403) {
+                    throw new Error('Non sei autorizzato a modificare questa review.');
+                }
+                if (response.status === 404) {
+                    throw new Error('Paper non trovato o utente non è parte della conferenza.');
+                }
+                if (response.status === 400) {
+                    throw new Error('Richiesta non valida. Controlla i dati inviati.');
+                }
+                throw new Error('Errore nella richiesta.');
             }
 
             const data = await response.json();
-            eventDispatcher('evaluationSubmitted', { detail: data }); // Notifica al genitore
+            console.log('Aggiornamento riuscito:', data.message);
+            alert('Lo stato della review è stato aggiornato con successo!');
         } catch (error) {
-            console.error('Errore nell\'invio della valutazione:', error);
+            console.error('Errore durante l\'aggiornamento:', error);
+            if (error instanceof Error) {
+                alert(error.message || 'Errore durante l\'aggiornamento dello stato della review.');
+            } else {
+                alert('Errore durante l\'aggiornamento dello stato della review.');
+            }
         } finally {
             showModal = false; // Nascondi il modale
         }
     }
 
-    async function submitEvaluationAdmin() {
+    async function submitEvaluationAdmin(evaluation : string) {
         try {
-            if (!$paper) {
-                throw new Error('Paper non trovato nel store!');
-            }
-            const response = await fetch(`http://localhost:8000/papers/${$paper.id}/evaluate`, {
-                method: 'POST',
-                credentials: 'include',
+            const response = await fetch('http://localhost:8000/papers/update_status/', {
+                method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ evaluation }),
+                credentials: 'include', // Necessario per includere il cookie CSRF, se richiesto
+                body: JSON.stringify({
+                    paper_id: $paper?.id,
+                    status: evaluation,
+                    user_id: $user?.id,
+                }),
             });
 
             if (!response.ok) {
-                throw new Error(`Errore nella richiesta: ${response.statusText}`);
+                // Gestione degli errori
+                if (response.status === 403) {
+                    throw new Error('Non sei autorizzato a modificare questo paper.');
+                }
+                if (response.status === 404) {
+                    throw new Error('Paper non trovato o utente non è parte della conferenza.');
+                }
+                if (response.status === 400) {
+                    throw new Error('Richiesta non valida. Controlla i dati inviati.');
+                }
+                throw new Error('Errore nella richiesta.');
             }
 
             const data = await response.json();
-            eventDispatcher('evaluationSubmitted', { detail: data }); // Notifica al genitore
+            console.log('Aggiornamento riuscito:', data.message);
+            alert('Lo stato del paper è stato aggiornato con successo!');
         } catch (error) {
-            console.error('Errore nell\'invio della valutazione:', error);
+            console.error('Errore durante l\'aggiornamento:', error);
+            if (error instanceof Error) {
+                alert(error.message || 'Errore durante l\'aggiornamento dello stato del paper.');
+            } else {
+                alert('Errore durante l\'aggiornamento dello stato del paper.');
+            }
         } finally {
             showModal = false; // Nascondi il modale
         }
     }
 
-    // ^^^^^^^^^^^^^^^ queste due funzioni sono ugauli perchè non so come chiamare il back end ma avranno poi due chiamate diverse ^^^^^^^^^^^^^^^^
 
 
 
@@ -305,9 +340,6 @@
 
             {#if $conference?.roles.includes(Role.Admin)}
             <div class="divider">Chair Evaluation</div>
-            {:else if $conference?.roles.includes(Role.Reviewer)}
-            <div class="divider">Reviewer Evaluation</div>
-            {/if}
             <div class="flex items-center justify-center space-x-4 mt-4">
                 <!-- Pulsanti di selezione -->
                 <button
@@ -321,6 +353,48 @@
                     Reject
                 </button>
             </div>
+            {:else if $conference?.roles.includes(Role.Reviewer)}
+            <div class="divider">Reviewer Evaluation</div>
+            <div class="flex flex-col items-center space-y-4 mt-4">
+                <!-- Label -->
+                <label for="score" class="font-semibold">Score (0-5):</label>
+
+                <!-- Barra di selezione -->
+                <input
+                type="range"
+                id="score"
+                min="0"
+                max="5"
+                step="1"
+                class="range range-primary w-64"
+                bind:value={evaluation}
+                />
+
+                <!-- Visualizzazione del punteggio selezionato -->
+                <p class="text-lg font-bold">Selected Score: {evaluation}</p>
+
+                <!-- Recensione scritta -->
+                <div class="form-control w-full max-w-md">
+                    <label class="label" for="reviewText">
+                        <span class="label-text font-semibold">Write your review</span>
+                    </label>
+                    <textarea
+                        id="reviewText"
+                        class="textarea textarea-bordered h-24"
+                        placeholder="Enter your review here"
+                        bind:value={reviewText}>
+                    </textarea>
+                </div>
+
+                <!-- Pulsante di conferma -->
+                <button
+                class="btn btn-outline btn-primary"
+                on:click={() => { evaluation = evaluation; showModal = true; }}>
+                Submit Score
+                </button>
+            </div>
+            {/if}
+            
 
             
             <!-- Modale di conferma -->
@@ -333,9 +407,9 @@
                         </p>
                         <div class="modal-action">
                             {#if $conference?.roles.includes(Role.Admin)}
-                                <button class="btn btn-success" on:click={submitEvaluationAdmin}>Confirm Evaluation</button>
+                                <button class="btn btn-success" on:click={() => evaluation && submitEvaluationAdmin(evaluation)}>Confirm Evaluation</button>
                             {:else if $conference?.roles.includes(Role.Reviewer)}
-                                <button class="btn btn-success" on:click={submitEvaluationReviewer}>Confirm Review</button>
+                                <button class="btn btn-success" on:click={() => evaluation && submitEvaluationReviewer(evaluation)}>Confirm Review</button>
                             {/if}
                             <button class="btn btn-outline" on:click={() => { showModal = false; }}>Cancel</button>
                         </div>
