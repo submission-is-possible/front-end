@@ -22,7 +22,10 @@
     let creatorId: number | null = null;
     let adminData: any = null; 
 
-    
+    async function openPaperOnLinkClicked(paper: Paper) {
+        window.open(`http://localhost:8000/papers/paper${paper.paper_file}`, '_blank', 'noopener'); 
+    }
+
     onMount(() => {
         //controlla i ruoli dell'utente e prendi le info necessarie
         try{
@@ -327,7 +330,7 @@
                     <p class="text-sm text-gray-500"><strong>Autore:</strong> {currentPaper.author}</p>
                     <button
                         class="btn btn-primary mt-4"
-                        on:click={() => currentPaper && window.open(currentPaper.paper_file, '_blank')}
+                        on:click={() => currentPaper && openPaperOnLinkClicked(currentPaper)}
                     >
                         Scarica Paper
                     </button>

@@ -131,6 +131,7 @@ function goToReviewerPage(page: number) {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials:"include",
         body: JSON.stringify({
           user_id: $user?.id,
           conference_id: $conference?.id
@@ -163,6 +164,7 @@ function goToReviewerPage(page: number) {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials:"include",
         body: JSON.stringify({
           user_id: $user?.id,
           conference_id: $conference?.id
@@ -195,6 +197,7 @@ function goToReviewerPage(page: number) {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials:"include",
         body: JSON.stringify({
           user_id: $user?.id,
           conference_id: $conference?.id
