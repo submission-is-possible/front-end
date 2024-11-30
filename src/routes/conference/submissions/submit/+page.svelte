@@ -1,6 +1,7 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
     import { conference } from '$stores/conferenceStore';
+  import { user } from '$stores/userStore';
 
     interface FormData {
         title: string,
@@ -36,7 +37,8 @@
     }
 
     function gotoConference() {
-        goto('/conferences');
+        goto('/conference');
+        console.log(user);
     }
 
     async function validateForm(): Promise<boolean> {
