@@ -48,7 +48,7 @@
 
 
 
-    let reviewers: { id: number; name: string; email: string; rating: string }[] = []; // Lista dei revisori
+    let reviewers: { id: number; name: string; email: string}[] = []; // Lista dei revisori
     let newReviewerEmail = ''; // Email del nuovo revisore da aggiungere
     let comments = ''; // Area per commenti (placeholder per futura implementazione)
 
@@ -99,7 +99,7 @@
             }
 
             // Effettua una chiamata POST al backend
-            const response = await fetch('http://localhost:8000/reviewers/add/', {
+            const response = await fetch('http://localhost:8000/assign_paper_reviewers/assign_reviewer_to_paper/', {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
@@ -107,7 +107,9 @@
                 },
                 body: JSON.stringify({
                     paper_id: $paper.id,
-                    email: newReviewerEmail,
+                    reviewer_email: newReviewerEmail,
+                    current_user_id: $user?.id,
+                    conference_id: $conference?.id,
                 }),
             });
 
@@ -146,15 +148,17 @@
             }
 
             // Effettua una chiamata DELETE al backend
-            const response = await fetch('http://localhost:8000/reviewers/remove/', {
-                method: 'DELETE',
+            const response = await fetch('http://localhost:8000/assign_paper_reviewers/remove_reviewer_from_paper/', {
+                method: 'POST',
                 credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
+                    current_user_id: $user?.id,
+                    conference_id: $conference?.id,
                     paper_id: $paper.id,
-                    email: reviewerToRemove.email,
+                    reviewer_email: reviewerToRemove.email,
                 }),
             });
 
@@ -426,7 +430,6 @@
                         <tr>
                             <th>Nome</th>
                             <th>Email</th>
-                            <th>Valutazione</th>
                             <th>Azione</th>
                         </tr>
                     </thead>
@@ -435,7 +438,6 @@
                             <tr>
                                 <td>{reviewer.name}</td>
                                 <td>{reviewer.email}</td>
-                                <td>{reviewer.rating}</td>
                                 <td>
                                     <button
                                         class="btn btn-error btn-sm"
