@@ -278,71 +278,73 @@ async function handleSubmit(event: SubmitEvent): Promise < void > {
     </div>
 
     <!-- CSV Info Modal -->
-{#if isInfoModalOpen}
-<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-  <div class="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
-    <div class="flex justify-between items-start mb-4">
-      <h3 class="text-lg font-bold">CSV File Format Instructions</h3>
-      <button 
-        class="btn btn-sm btn-ghost"
-        onclick={toggleInfoModal}
-        aria-label="Close modal">
-        ✕
-      </button>
-    </div>
-    
-    <div class="space-y-4">
-      <div class="space-y-2">
-        <p class="font-semibold">How to create the CSV file:</p>
-        <ol class="list-decimal pl-5 space-y-2">
-          <li>Open Microsoft Excel</li>
-          <li>Create a single column with email addresses (one per row)</li>
-          <li>Do not include any headers or additional columns</li>
-          <li>Go to File → Save As</li>
-          <li>Choose "CSV (Comma delimited) (*.csv)" from the file type dropdown</li>
-          <li>Click Save</li>
-        </ol>
-      </div>
-
-      <div class="bg-gray-100 p-4 rounded-md">
-        <p class="font-semibold mb-2">Example CSV content:</p>
-        <pre class="text-sm">reviewer1@example.com
-reviewer2@example.com
-reviewer3@example.com</pre>
-      </div>
-      
-      <div class="space-y-2">
-        <p class="font-semibold">Important notes:</p>
-        <ul class="list-disc pl-5 space-y-1">
-          <li>Use simple CSV format (comma-delimited)</li>
-          <li>One email address per row</li>
-          <li>No headers, titles, or extra columns</li>
-          <li>No commas in the data</li>
-          <li>File must have .csv extension</li>
-          <li>UTF-8 encoding is preferred</li>
-        </ul>
-      </div>
-      
-      <div class="bg-yellow-50 p-3 rounded-md text-sm">
-          <p class="font-semibold text-yellow-800">Common issues to avoid:</p>
-          <ul class="list-disc pl-5 text-yellow-700">
-            <li>Don't use Excel's "Text to Columns" feature</li>
-            <li>Don't include column headers</li>
-            <li>Don't include quotation marks around emails</li>
-            <li>Don't use semicolons as separators</li>
-          </ul>
+    {#if isInfoModalOpen}
+    <div class="modal modal-open">
+      <div class="modal-box w-11/12 max-w-2xl bg-base-100 shadow-xl">
+        <div class="flex justify-between items-center border-b border-base-content/10 pb-4 mb-4">
+          <h3 class="text-lg font-bold text-base-content">CSV File Format Instructions</h3>
+          <button
+            class="btn btn-ghost btn-sm btn-circle"
+            onclick={toggleInfoModal}
+            aria-label="Close modal">
+            ✕
+          </button>
+        </div>
+        
+        <div class="space-y-4">
+          <div class="space-y-2">
+            <p class="font-semibold text-base-content">How to create the CSV file:</p>
+            <ol class="list-decimal pl-5 space-y-2 text-base-content">
+              <li>Open Microsoft Excel</li>
+              <li>Create a single column with email addresses (one per row)</li>
+              <li>Do not include any headers or additional columns</li>
+              <li>Go to File → Save As</li>
+              <li>Choose "CSV (Comma delimited) (*.csv)" from the file type dropdown</li>
+              <li>Click Save</li>
+            </ol>
+          </div>
+          
+          <div class="bg-base-200 p-4 rounded-md">
+            <p class="font-semibold mb-2 text-base-content">Example CSV content:</p>
+            <div class="text-sm bg-base-300 p-2 rounded whitespace-nowrap">
+              <div class="text-left">reviewer1@example.com</div>
+              <div class="text-left">reviewer2@example.com</div>
+              <div class="text-left">reviewer3@example.com</div>
+            </div>
+          </div>
+          
+          <div class="space-y-2">
+            <p class="font-semibold text-base-content">Important notes:</p>
+            <ul class="list-disc pl-5 space-y-1 text-base-content">
+              <li>Use simple CSV format (comma-delimited)</li>
+              <li>One email address per row</li>
+              <li>No headers, titles, or extra columns</li>
+              <li>No commas in the data</li>
+              <li>File must have .csv extension</li>
+              <li>UTF-8 encoding is preferred</li>
+            </ul>
+          </div>
+          
+          <div class="bg-warning/10 p-3 rounded-md text-sm">
+            <p class="font-semibold text-warning">Common issues to avoid:</p>
+            <ul class="list-disc pl-5 text-warning">
+              <li>Don't use Excel's "Text to Columns" feature</li>
+              <li>Don't include column headers</li>
+              <li>Don't include quotation marks around emails</li>
+              <li>Don't use semicolons as separators</li>
+            </ul>
+          </div>
+        </div>
+        
+        <div class="modal-action mt-4">
+          <button
+            class="btn btn-primary"
+            onclick={toggleInfoModal}>
+            Got it
+          </button>
         </div>
       </div>
-      <div class="mt-6 flex justify-end sticky bottom-0 bg-transparent pt-2">
-        <button 
-          class="btn btn-primary"
-          onclick={toggleInfoModal}>
-          Got it
-        </button>
-      </div>
     </div>
-  </div>
-  
     {/if}
 
     <!-- Submit Error Message -->

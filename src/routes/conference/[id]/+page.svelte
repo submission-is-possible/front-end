@@ -3,14 +3,10 @@
   import type { PageData } from './$types';
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
-  import { paper, setPaper } from '$stores/paperStore';
   import { user } from '$stores/userStore';
-  import { conference, setConference } from '$stores/conferenceStore'
+  import { conference } from '$stores/conferenceStore'
   import {Role} from '$lib/models/role';
   import { Paper, goToPaperDetail } from '$lib/models/paper';
-  import { get } from 'svelte/store';
-  //import type { ConferenceFormData } from '$lib/types';
-  import { Conference } from '$lib/models/conference';
   export let data: PageData;
 
   //let conference: Conference | null = null;
@@ -24,16 +20,24 @@
 
   interface ConferenceFormData {
     conference_id: Number;
-    title: String;
-    deadline: Date;
-    description: String;
+    title: string;
+    deadline: string;
+    description: string;
+  }
+
+  // Funzione per formattare la data nel formato yyyy-MM-dd
+  function formatDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   // Form data for editing
   let editFormData: ConferenceFormData = {
     conference_id: 0,
     title: '',
-    deadline: new Date,
+    deadline: formatDate(new Date()),
     description: ''
   };
 
@@ -46,9 +50,9 @@
       if ($conference && $user) {
         editFormData = {
           conference_id: $conference.id,
-          title: $conference.title,
-          deadline: $conference.deadline,
-          description: $conference.description,
+          title: $conference.title.toString(),
+          deadline: formatDate(new Date($conference.deadline)),
+          description: $conference.description.toString(),
           //user_id: $user.id // Assicurati che user_id sia presente
         };
       }
@@ -66,62 +70,60 @@
     }
   });
 
-// Usa il tipo nella variabile
-let AuthorPapers: Paper[] = [];
-let ReviewerPapers: Paper[] = [];
-let AdminPapers: Paper[] = [];
+  // Usa il tipo nella variabile
+  let AuthorPapers: Paper[] = [];
+  let ReviewerPapers: Paper[] = [];
+  let AdminPapers: Paper[] = [];
 
 
-// Stato per la paginazione
-let pageSize: number = 12; // Numero di paper per pagina
+  // Stato per la paginazione
+  let pageSize: number = 12; // Numero di paper per pagina
 
-let currentAdminPage: number = 1;
-let currentAuthorPage: number = 1;
-let currentReviewerPage: number = 1;
+  let currentAdminPage: number = 1;
+  let currentAuthorPage: number = 1;
+  let currentReviewerPage: number = 1;
 
-let totalAdminPages: number = 1;
-let totalAuthorPages: number = 1;
-let totalReviewerPages: number = 1;
+  let totalAdminPages: number = 1;
+  let totalAuthorPages: number = 1;
+  let totalReviewerPages: number = 1;
+  
+  let totalAdminPapers: number = 0;
+  let totalAuthorPapers: number = 0;
+  let totalReviewerPapers: number = 0;
 
-let totalAdminPapers: number = 0;
-let totalAuthorPapers: number = 0;
-let totalReviewerPapers: number = 0;
-
-
-// Calcola il totale delle pagine
-$: totalAdminPages = Math.ceil(totalAdminPapers / pageSize);
-$: totalAuthorPages = Math.ceil(totalAuthorPapers / pageSize);
-$: totalReviewerPages = Math.ceil(totalReviewerPapers / pageSize);
-
-
-$: if (isAdmin) {
-  fetchAdminPapers();
-}
+  //serve per gestire lo stato del modal (info del csv)
+  let isInfoModalOpen = false;
+  
+  // Calcola il totale delle pagine
+  $: totalAdminPages = Math.ceil(totalAdminPapers / pageSize);
+  $: totalAuthorPages = Math.ceil(totalAuthorPapers / pageSize);
+  $: totalReviewerPages = Math.ceil(totalReviewerPapers / pageSize);
 
 
-
-
-
-function goToAdminPage(page: number) {
-  if (page >= 1 && page <= totalAdminPages) {
-    currentAdminPage = page;
+  $: if (isAdmin) {
+    fetchAdminPapers();
   }
-  fetchAdminPapers(page);
-}
 
-function goToAuthorPage(page: number) {
-  if (page >= 1 && page <= totalAuthorPages) {
-    currentAuthorPage = page;
+  function goToAdminPage(page: number) {
+    if (page >= 1 && page <= totalAdminPages) {
+      currentAdminPage = page;
+    }
+    fetchAdminPapers(page);
   }
-  fetchAuthorPapers(page);
-}
 
-function goToReviewerPage(page: number) {
-  if (page >= 1 && page <= totalReviewerPages) {
-    currentReviewerPage = page;
+  function goToAuthorPage(page: number) {
+    if (page >= 1 && page <= totalAuthorPages) {
+      currentAuthorPage = page;
+    }
+    fetchAuthorPapers(page);
   }
-  fetchReviewerPapers(page);
-}
+
+  function goToReviewerPage(page: number) {
+    if (page >= 1 && page <= totalReviewerPages) {
+      currentReviewerPage = page;
+    }
+    fetchReviewerPapers(page);
+  }
 
 
   async function fetchAdminPapers(page: number = 1) {
@@ -304,32 +306,45 @@ function goToReviewerPage(page: number) {
     
     if (!validateForm()) return;
 
-    try {
-      isSubmitting = true;
-      const response = await fetch('http://localhost:8000/conference/edit/', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials:'include',
-        body: JSON.stringify(editFormData),
-      });
+    // Filter out empty or invalid emails
+    const validReviewers = formInvitations.reviewers.filter(reviewer => 
+        reviewer.email.trim() !== ''
+    );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to update conference');
+    if (!isInfoModalOpen) {
+      try {
+        isSubmitting = true;
+        const response = await fetch('http://localhost:8000/conference/edit/', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials:'include',
+          body: JSON.stringify({
+            ...editFormData,
+            reviewers: validReviewers
+          })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to update conference');
+        }
+
+        if ($conference) {
+          $conference.title = editFormData.title;
+          $conference.deadline = new Date(editFormData.deadline);
+          $conference.description = editFormData.description;
+        }
+
+        isEditing = false;
+        error = null;
+      } catch (err) {
+        error = err instanceof Error ? err.message : 'Failed to update conference. Please try again.';
+        console.error('Error updating conference:', err);
+      } finally {
+        isSubmitting = false;
       }
-      
-      //const updatedConference = await response.json();
-      //setConference(updatedConference);
-
-      isEditing = false;
-      error = null;
-    } catch (err) {
-      error = err instanceof Error ? err.message : 'Failed to update conference. Please try again.';
-      console.error('Error updating conference:', err);
-    } finally {
-      isSubmitting = false;
     }
   }
 
@@ -356,7 +371,75 @@ function goToReviewerPage(page: number) {
     return true;
   }
 
+  interface FormInvitations {
+    reviewers: { email: string }[];
+  }
+
+  interface FormErrors {
+    title?: boolean;
+    admin_id?: boolean;
+    deadline?: boolean;
+    description?: boolean;
+    submit?: string;
+    csvFile?: string;
+  }
+
+
+  let errors: FormErrors = {};
+  let csvFile: File | null = null;
+
+
+  let formInvitations: FormInvitations = {
+    reviewers: []
+  };
+
+
   $: isAdmin = conference && currentUserId && creatorId && currentUserId == creatorId;
+
+  async function handleCsvUpload(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      csvFile = input.files[0];
+
+      // Create FormData object
+      const formData = new FormData();
+      formData.append('csv_file', csvFile);
+
+      try {
+        const response = await fetch('http://localhost:8000/conference/upload_reviewers_csv/', {
+          method: 'POST',
+          credentials: 'include',
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          errors.csvFile = data.error;
+          return;
+        }
+
+        // Add extracted emails to the reviewers list
+        formInvitations.reviewers = data.emails.map((email: string) => ({ email }));
+      } catch (error) {
+        errors.csvFile = 'Error processing CSV file';
+      }
+    }
+  }
+
+  function addEmail(role: 'reviewers') {
+    formInvitations[role] = [...formInvitations[role], { email: '' }];
+  }
+
+  function removeEmail(role: 'reviewers', index: number) {
+    formInvitations[role] = formInvitations[role].filter((_, i) => i !== index);
+  } 
+
+
+  //per toggleare il modal
+  function toggleInfoModal() {
+    isInfoModalOpen = !isInfoModalOpen;
+  }
 </script>
 
 <div class="container mx-auto p-2 md:p-4">
@@ -364,7 +447,7 @@ function goToReviewerPage(page: number) {
   <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
     <button
       class="btn btn-ghost self-start"
-      on:click={() => goto('/conference')}
+      onclick={() => goto('/conference')}
       data-testid="back-to-conferences-button">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -383,13 +466,13 @@ function goToReviewerPage(page: number) {
     </div>
   
   <!-- Error State -->
-  {:else if error}
+  {:else if error && !isEditing}
     <div class="alert alert-error shadow-lg mb-6" role="alert">
       <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
       <span>{error}</span>
-      <button class="btn btn-sm btn-ghost" on:click={() => error = null}>Dismiss</button>
+      <button class="btn btn-sm btn-ghost" onclick={() => error = null}>Dismiss</button>
     </div>
 
   <!-- Main Content -->
@@ -397,7 +480,7 @@ function goToReviewerPage(page: number) {
     {#if isEditing}
       <div class="card bg-base-100 shadow-xl">
         <div class="card-body">
-          <form class="space-y-6" on:submit={handleSubmit} data-testid="edit-conference-form">
+          <form class="space-y-6" onsubmit={handleSubmit} data-testid="edit-conference-form">
             <div class="form-control">
               <label for="title" class="label">
                 <span class="label-text text-lg font-semibold">Title</span>
@@ -434,12 +517,142 @@ function goToReviewerPage(page: number) {
                 data-testid="deadline-input"
               />
             </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+              <!-- CSV Upload for Reviewers -->
+              <div>
+                <div class="flex items-center gap-2 mb-2">
+                  <h3 class="font-semibold">Upload Reviewers CSV</h3>
+                  <button 
+                    class="btn btn-ghost btn-xs btn-circle"
+                   onclick={toggleInfoModal}
+                    aria-label="CSV format info">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h1m0-4h-1m1 8v2m-1 2a9 9 0 100-18 9 9 0 000 18z" />
+                    </svg>
+                  </button>
+                </div>
+                <div class="form-control w-full">
+                  <input 
+                    type="file" 
+                    accept=".csv"
+                    class="file-input file-input-bordered w-full" 
+                    onchange={handleCsvUpload}
+                    data-testid="csv-upload-input"
+                  />
+                  {#if errors.csvFile}
+                    <span class="label-text-alt text-error" role="alert">{errors.csvFile}</span>
+                  {/if}
+                </div>
+              </div>
+        
+              <!-- Reviewers List with scroll -->
+              <div>
+                <h3 class="font-semibold mb-2">Reviewers</h3>
+                <div class="relative">
+                  <div class="max-h-64 overflow-y-auto border rounded-lg p-2 mb-2">
+                    {#each formInvitations.reviewers as reviewer, index}
+                      <div class="flex items-center mb-2 last:mb-0">
+                        <input type="text" 
+                          bind:value={reviewer.email} 
+                          placeholder="Reviewer email"
+                          class="input input-bordered w-full" 
+                          data-testid="reviewer-email-input"/>
+                        <button 
+                          type="button" 
+                          class="btn btn-error btn-sm ml-2" 
+                          onclick={() => removeEmail('reviewers', index)}>
+                          Remove
+                        </button>
+                      </div>
+                    {/each}
+                  </div>
+                  <button 
+                    type="button" 
+                    class="btn btn-secondary w-full mt-2" 
+                    onclick={() => addEmail('reviewers')}>
+                    Add Reviewer
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            
+            <!-- CSV Info Modal -->
+            {#if isInfoModalOpen}
+            <div class="modal modal-open">
+              <div class="modal-box w-11/12 max-w-2xl bg-base-100 shadow-xl">
+                <div class="flex justify-between items-center border-b border-base-content/10 pb-4 mb-4">
+                  <h3 class="text-lg font-bold text-base-content">CSV File Format Instructions</h3>
+                  <button
+                    class="btn btn-ghost btn-sm btn-circle"
+                    onclick={toggleInfoModal}
+                    aria-label="Close modal">
+                    ✕
+                  </button>
+                </div>
+                
+                <div class="space-y-4">
+                  <div class="space-y-2">
+                    <p class="font-semibold text-base-content">How to create the CSV file:</p>
+                    <ol class="list-decimal pl-5 space-y-2 text-base-content">
+                      <li>Open Microsoft Excel</li>
+                      <li>Create a single column with email addresses (one per row)</li>
+                      <li>Do not include any headers or additional columns</li>
+                      <li>Go to File → Save As</li>
+                      <li>Choose "CSV (Comma delimited) (*.csv)" from the file type dropdown</li>
+                      <li>Click Save</li>
+                    </ol>
+                  </div>
+                  
+                  <div class="bg-base-200 p-4 rounded-md">
+                    <p class="font-semibold mb-2 text-base-content">Example CSV content:</p>
+                    <div class="text-sm bg-base-300 p-2 rounded whitespace-nowrap">
+                      <div class="text-left">reviewer1@example.com</div>
+                      <div class="text-left">reviewer2@example.com</div>
+                      <div class="text-left">reviewer3@example.com</div>
+                    </div>
+                  </div>
+                  
+                  <div class="space-y-2">
+                    <p class="font-semibold text-base-content">Important notes:</p>
+                    <ul class="list-disc pl-5 space-y-1 text-base-content">
+                      <li>Use simple CSV format (comma-delimited)</li>
+                      <li>One email address per row</li>
+                      <li>No headers, titles, or extra columns</li>
+                      <li>No commas in the data</li>
+                      <li>File must have .csv extension</li>
+                      <li>UTF-8 encoding is preferred</li>
+                    </ul>
+                  </div>
+                  
+                  <div class="bg-warning/10 p-3 rounded-md text-sm">
+                    <p class="font-semibold text-warning">Common issues to avoid:</p>
+                    <ul class="list-disc pl-5 text-warning">
+                      <li>Don't use Excel's "Text to Columns" feature</li>
+                      <li>Don't include column headers</li>
+                      <li>Don't include quotation marks around emails</li>
+                      <li>Don't use semicolons as separators</li>
+                    </ul>
+                  </div>
+                </div>
+                
+                <div class="modal-action mt-4">
+                  <button
+                    class="btn btn-primary"
+                    onclick={toggleInfoModal}>
+                    Got it
+                  </button>
+                </div>
+              </div>
+            </div>
+            {/if}
 
             <div class="flex gap-4 justify-end mt-8">
               <button 
                 type="button" 
                 class="btn btn-ghost" 
-                on:click={() => {
+                onclick={() => {
                   isEditing = false;
                   error = null;
                 }}
@@ -457,6 +670,16 @@ function goToReviewerPage(page: number) {
                 {isSubmitting ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
+
+            {#if error}
+              <div class="alert alert-error shadow-lg mb-6" role="alert">
+                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>{error}</span>
+              </div>
+            {/if}
+
           </form>
         </div>
       </div>
@@ -469,7 +692,7 @@ function goToReviewerPage(page: number) {
               <div class="flex gap-2">
                 <button 
                   class="btn btn-primary"
-                  on:click={() => {
+                  onclick={() => {
                     isEditing = true;
                     error = null;
                   }}
@@ -482,7 +705,7 @@ function goToReviewerPage(page: number) {
                 </button>
                 <button 
                   class="btn btn-error"
-                  on:click={handleDelete}
+                  onclick={handleDelete}
                   disabled={isSubmitting}
                   data-testid="delete-button"
                 >
@@ -533,7 +756,7 @@ function goToReviewerPage(page: number) {
                     </thead>
                     <tbody>
                       {#each AdminPapers as paper}
-                        <tr class="hover" on:click={() => goToPaperDetail(paper)} style="cursor: pointer;">
+                        <tr class="hover" onclick={() => goToPaperDetail(paper)} style="cursor: pointer;">
                           <td>{paper.id}</td>
                           <td>{paper.author}</td>
                           <td>{paper.title}</td>
@@ -549,7 +772,7 @@ function goToReviewerPage(page: number) {
                   <div class="join">
                     <!-- Primo pulsante -->
                     {#if currentAdminPage > 2}
-                      <button class="join-item btn" on:click={() => goToAdminPage(1)}>1</button>
+                      <button class="join-item btn" onclick={() => goToAdminPage(1)}>1</button>
                     {/if}
 
                     <!-- Ellissi -->
@@ -559,7 +782,7 @@ function goToReviewerPage(page: number) {
 
                     <!-- Pagina precedente -->
                     {#if currentAdminPage > 1}
-                      <button class="join-item btn" on:click={() => goToAdminPage(currentAdminPage - 1)}>
+                      <button class="join-item btn" onclick={() => goToAdminPage(currentAdminPage - 1)}>
                         {currentAdminPage - 1}
                       </button>
                     {/if}
@@ -569,7 +792,7 @@ function goToReviewerPage(page: number) {
 
                     <!-- Pagina successiva -->
                     {#if currentAdminPage < totalAdminPages}
-                      <button class="join-item btn" on:click={() => goToAdminPage(currentAdminPage + 1)}>
+                      <button class="join-item btn" onclick={() => goToAdminPage(currentAdminPage + 1)}>
                         {currentAdminPage + 1}
                       </button>
                     {/if}
@@ -581,7 +804,7 @@ function goToReviewerPage(page: number) {
 
                     <!-- Ultima pagina -->
                     {#if totalAdminPages > 1 && currentAdminPage < totalAdminPages - 1}
-                      <button class="join-item btn" on:click={() => goToAdminPage(totalAdminPages)}>
+                      <button class="join-item btn" onclick={() => goToAdminPage(totalAdminPages)}>
                         {totalAdminPages}
                       </button>
                     {/if}
@@ -599,7 +822,7 @@ function goToReviewerPage(page: number) {
                 <h3 class="text-xl font-semibold">Papers submitted by You</h3>
                 <button
                   class="btn btn-primary"
-                  on:click={() => goto('/conference/submissions/submit')}>
+                  onclick={() => goto('/conference/submissions/submit')}>
                   Submit a New Paper
                 </button>
               </div>
@@ -616,6 +839,7 @@ function goToReviewerPage(page: number) {
                     </thead>
                     <tbody>
                       {#each AuthorPapers as paper}
+                        <tr class="hover" onclick={() => goToPaperDetail(paper)} style="cursor: pointer;">
                         <tr class="hover">
                           <td>{paper.id}</td>
                           <td>{paper.author}</td>
@@ -632,7 +856,7 @@ function goToReviewerPage(page: number) {
                   <div class="join">
                     <!-- Primo pulsante -->
                     {#if currentAuthorPage > 2}
-                      <button class="join-item btn" on:click={() => goToAuthorPage(1)}>1</button>
+                      <button class="join-item btn" onclick={() => goToAuthorPage(1)}>1</button>
                     {/if}
 
                     <!-- Ellissi -->
@@ -642,7 +866,7 @@ function goToReviewerPage(page: number) {
 
                     <!-- Pagina precedente -->
                     {#if currentAuthorPage > 1}
-                      <button class="join-item btn" on:click={() => goToAuthorPage(currentAuthorPage - 1)}>
+                      <button class="join-item btn" onclick={() => goToAuthorPage(currentAuthorPage - 1)}>
                         {currentAuthorPage - 1}
                       </button>
                     {/if}
@@ -652,7 +876,7 @@ function goToReviewerPage(page: number) {
 
                     <!-- Pagina successiva -->
                     {#if currentAuthorPage < totalAuthorPages}
-                      <button class="join-item btn" on:click={() => goToAuthorPage(currentAuthorPage + 1)}>
+                      <button class="join-item btn" onclick={() => goToAuthorPage(currentAuthorPage + 1)}>
                         {currentAuthorPage + 1}
                       </button>
                     {/if}
@@ -664,7 +888,7 @@ function goToReviewerPage(page: number) {
 
                     <!-- Ultima pagina -->
                     {#if totalAuthorPages > 1 && currentAuthorPage < totalAuthorPages - 1}
-                      <button class="join-item btn" on:click={() => goToAuthorPage(totalAuthorPages)}>
+                      <button class="join-item btn" onclick={() => goToAuthorPage(totalAuthorPages)}>
                         {totalAuthorPages}
                       </button>
                     {/if}
@@ -692,7 +916,7 @@ function goToReviewerPage(page: number) {
                     </thead>
                     <tbody>
                       {#each ReviewerPapers as paper}
-                        <tr class="hover" on:click={() => goToPaperDetail(paper)} style="cursor: pointer;">
+                        <tr class="hover" onclick={() => goToPaperDetail(paper)} style="cursor: pointer;">
                           <td>{paper.id}</td>
                           <td>{paper.author}</td>
                           <td>{paper.title}</td>
@@ -708,7 +932,7 @@ function goToReviewerPage(page: number) {
                   <div class="join">
                     <!-- Primo pulsante -->
                     {#if currentReviewerPage > 2}
-                      <button class="join-item btn" on:click={() => goToReviewerPage(1)}>1</button>
+                      <button class="join-item btn" onclick={() => goToReviewerPage(1)}>1</button>
                     {/if}
 
                     <!-- Ellissi -->
@@ -718,7 +942,7 @@ function goToReviewerPage(page: number) {
 
                     <!-- Pagina precedente -->
                     {#if currentReviewerPage > 1}
-                      <button class="join-item btn" on:click={() => goToReviewerPage(currentReviewerPage - 1)}>
+                      <button class="join-item btn" onclick={() => goToReviewerPage(currentReviewerPage - 1)}>
                         {currentReviewerPage - 1}
                       </button>
                     {/if}
@@ -728,7 +952,7 @@ function goToReviewerPage(page: number) {
 
                     <!-- Pagina successiva -->
                     {#if currentReviewerPage < totalReviewerPages}
-                      <button class="join-item btn" on:click={() => goToReviewerPage(currentReviewerPage + 1)}>
+                      <button class="join-item btn" onclick={() => goToReviewerPage(currentReviewerPage + 1)}>
                         {currentReviewerPage + 1}
                       </button>
                     {/if}
@@ -740,7 +964,7 @@ function goToReviewerPage(page: number) {
 
                     <!-- Ultima pagina -->
                     {#if totalReviewerPages > 1 && currentReviewerPage < totalReviewerPages - 1}
-                      <button class="join-item btn" on:click={() => goToReviewerPage(totalReviewerPages)}>
+                      <button class="join-item btn" onclick={() => goToReviewerPage(totalReviewerPages)}>
                         {totalReviewerPages}
                       </button>
                     {/if}
