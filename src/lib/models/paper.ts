@@ -1,5 +1,6 @@
 import { goto } from '$app/navigation';
 import { setPaper } from '$stores/paperStore';
+import { Role } from '$lib/models/role';
 
 export class Paper {
     id: number;
@@ -10,8 +11,9 @@ export class Paper {
     author: string;
     status: string;
     created_at: string;
+    role: Role;
 
-    constructor(id: number, title: string, paper_file: string, conference: number, conference_title: string, author: string, status: string, created_at: string) {
+    constructor(id: number, title: string, paper_file: string, conference: number, conference_title: string, author: string, status: string, created_at: string, role: Role) {
         this.id = id;
         this.title = title;
         this.paper_file = paper_file;
@@ -20,6 +22,7 @@ export class Paper {
         this.author = author;
         this.status = status;
         this.created_at = created_at;
+        this.role = role;
     }
 }
 
