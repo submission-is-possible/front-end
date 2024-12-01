@@ -3,14 +3,10 @@
   import type { PageData } from './$types';
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
-  import { paper, setPaper } from '$stores/paperStore';
   import { user } from '$stores/userStore';
-  import { conference, setConference } from '$stores/conferenceStore'
+  import { conference } from '$stores/conferenceStore'
   import {Role} from '$lib/models/role';
   import { Paper, goToPaperDetail } from '$lib/models/paper';
-  import { get } from 'svelte/store';
-  //import type { ConferenceFormData } from '$lib/types';
-  import { Conference } from '$lib/models/conference';
   export let data: PageData;
 
   //let conference: Conference | null = null;
@@ -24,16 +20,24 @@
 
   interface ConferenceFormData {
     conference_id: Number;
-    title: String;
-    deadline: Date;
-    description: String;
+    title: string;
+    deadline: string;
+    description: string;
+  }
+
+  // Funzione per formattare la data nel formato yyyy-MM-dd
+  function formatDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   // Form data for editing
   let editFormData: ConferenceFormData = {
     conference_id: 0,
     title: '',
-    deadline: new Date,
+    deadline: formatDate(new Date()),
     description: ''
   };
 
@@ -46,9 +50,9 @@
       if ($conference && $user) {
         editFormData = {
           conference_id: $conference.id,
-          title: $conference.title,
-          deadline: $conference.deadline,
-          description: $conference.description,
+          title: $conference.title.toString(),
+          deadline: formatDate(new Date($conference.deadline)),
+          description: $conference.description.toString(),
           //user_id: $user.id // Assicurati che user_id sia presente
         };
       }
@@ -66,62 +70,58 @@
     }
   });
 
-// Usa il tipo nella variabile
-let AuthorPapers: Paper[] = [];
-let ReviewerPapers: Paper[] = [];
-let AdminPapers: Paper[] = [];
+  // Usa il tipo nella variabile
+  let AuthorPapers: Paper[] = [];
+  let ReviewerPapers: Paper[] = [];
+  let AdminPapers: Paper[] = [];
 
 
-// Stato per la paginazione
-let pageSize: number = 12; // Numero di paper per pagina
+  // Stato per la paginazione
+  let pageSize: number = 12; // Numero di paper per pagina
 
-let currentAdminPage: number = 1;
-let currentAuthorPage: number = 1;
-let currentReviewerPage: number = 1;
+  let currentAdminPage: number = 1;
+  let currentAuthorPage: number = 1;
+  let currentReviewerPage: number = 1;
 
-let totalAdminPages: number = 1;
-let totalAuthorPages: number = 1;
-let totalReviewerPages: number = 1;
+  let totalAdminPages: number = 1;
+  let totalAuthorPages: number = 1;
+  let totalReviewerPages: number = 1;
 
-let totalAdminPapers: number = 0;
-let totalAuthorPapers: number = 0;
-let totalReviewerPapers: number = 0;
-
-
-// Calcola il totale delle pagine
-$: totalAdminPages = Math.ceil(totalAdminPapers / pageSize);
-$: totalAuthorPages = Math.ceil(totalAuthorPapers / pageSize);
-$: totalReviewerPages = Math.ceil(totalReviewerPapers / pageSize);
+  let totalAdminPapers: number = 0;
+  let totalAuthorPapers: number = 0;
+  let totalReviewerPapers: number = 0;
 
 
-$: if (isAdmin) {
-  fetchAdminPapers();
-}
+  // Calcola il totale delle pagine
+  $: totalAdminPages = Math.ceil(totalAdminPapers / pageSize);
+  $: totalAuthorPages = Math.ceil(totalAuthorPapers / pageSize);
+  $: totalReviewerPages = Math.ceil(totalReviewerPapers / pageSize);
 
 
-
-
-
-function goToAdminPage(page: number) {
-  if (page >= 1 && page <= totalAdminPages) {
-    currentAdminPage = page;
+  $: if (isAdmin) {
+    fetchAdminPapers();
   }
-  fetchAdminPapers(page);
-}
 
-function goToAuthorPage(page: number) {
-  if (page >= 1 && page <= totalAuthorPages) {
-    currentAuthorPage = page;
+  function goToAdminPage(page: number) {
+    if (page >= 1 && page <= totalAdminPages) {
+      currentAdminPage = page;
+    }
+    fetchAdminPapers(page);
   }
-  fetchAuthorPapers(page);
-}
 
-function goToReviewerPage(page: number) {
-  if (page >= 1 && page <= totalReviewerPages) {
-    currentReviewerPage = page;
+  function goToAuthorPage(page: number) {
+    if (page >= 1 && page <= totalAuthorPages) {
+      currentAuthorPage = page;
+    }
+    fetchAuthorPapers(page);
   }
-  fetchReviewerPapers(page);
-}
+
+  function goToReviewerPage(page: number) {
+    if (page >= 1 && page <= totalReviewerPages) {
+      currentReviewerPage = page;
+    }
+    fetchReviewerPapers(page);
+  }
 
 
   async function fetchAdminPapers(page: number = 1) {
@@ -299,16 +299,19 @@ function goToReviewerPage(page: number) {
           'Content-Type': 'application/json',
         },
         credentials:'include',
-        body: JSON.stringify(editFormData),
+        body: JSON.stringify(editFormData), 
       });
 
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to update conference');
       }
-      
-      //const updatedConference = await response.json();
-      //setConference(updatedConference);
+
+      if ($conference) {
+        $conference.title = editFormData.title;
+        $conference.deadline = new Date(editFormData.deadline);
+        $conference.description = editFormData.description;
+      }
 
       isEditing = false;
       error = null;
