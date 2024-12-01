@@ -150,6 +150,10 @@ function goToReviewerPage(page: number) {
 
       const data = await response.json();
       AdminPapers = data.papers;
+      AdminPapers = data.papers.map((paper: Paper) => ({
+            ...paper,
+            role: Role.Admin
+        }));
       currentAdminPage = data.current_page;
       totalAdminPapers = data.total_papers;
     } catch (error) {
@@ -182,7 +186,12 @@ function goToReviewerPage(page: number) {
       }
 
       const data = await response.json();
+      console.log("chiamta rev",data);
       ReviewerPapers = data.papers;
+      ReviewerPapers = data.papers.map((paper: Paper) => ({
+            ...paper,
+            role: Role.Reviewer
+        }));
       currentReviewerPage = data.current_page;
       totalReviewerPapers = data.total_papers;
     } catch (error) {
@@ -216,6 +225,10 @@ function goToReviewerPage(page: number) {
 
       const data = await response.json();
       AuthorPapers = data.papers;
+      AuthorPapers = data.papers.map((paper: Paper) => ({
+            ...paper,
+            role: Role.Author
+        }));
       currentAuthorPage = data.current_page;
       totalAuthorPapers = data.total_papers;
     } catch (error) {
@@ -582,8 +595,8 @@ function goToReviewerPage(page: number) {
 
           {#if $conference && $conference.roles && $conference.roles?.includes(Role.Author)} <!-- mostra la pagina per gli autori autore-->
             <div class="mt-8">
-              <h3 class="text-xl font-semibold mb-4">Papers submitted by You</h3>
-              <div class="mb-4">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-semibold">Papers submitted by You</h3>
                 <button
                   class="btn btn-primary"
                   on:click={() => goto('/conference/submissions/submit')}>
@@ -603,7 +616,7 @@ function goToReviewerPage(page: number) {
                     </thead>
                     <tbody>
                       {#each AuthorPapers as paper}
-                        <tr class="hover" on:click={() => goToPaperDetail(paper)} style="cursor: pointer;">
+                        <tr class="hover">
                           <td>{paper.id}</td>
                           <td>{paper.author}</td>
                           <td>{paper.title}</td>

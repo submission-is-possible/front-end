@@ -11,9 +11,9 @@
   //import type { ConferenceFormData } from '$lib/types';
   import { Conference } from '$lib/models/conference';
   export let data: PageData;
+  import { writable } from 'svelte/store';
 
 
-    let canEdit = false;
     let isLoading = true;
     let error: string | null = null;
     let reviewText = '';
@@ -21,6 +21,7 @@
     let currentUserId: number | null = null;
     let creatorId: number | null = null;
     let adminData: any = null; 
+    let isAuthor = false;
 
     async function openPaperOnLinkClicked(paper: Paper) {
         window.open(`http://localhost:8000/papers/paper${paper.paper_file}`, '_blank', 'noopener'); 
@@ -30,14 +31,14 @@
         //controlla i ruoli dell'utente e prendi le info necessarie
         try{
             currentPaper = $paper;
-            if($conference?.roles.includes(Role.Admin)){
+            if($paper?.role.includes(Role.Admin)){
                 fetchReviewData();
-                canEdit = true;
+                fetchPaperReviews();
             }
-            if($conference?.roles.includes(Role.Author)){
+            if($paper?.role.includes(Role.Author)){
                 //PRENDI DATI AUTHOR
             }
-            if($conference?.roles.includes(Role.Reviewer)){
+            if($paper?.role.includes(Role.Reviewer)){
                 fetchReviewData();
             }
         } catch (err) {
@@ -51,7 +52,7 @@
 
 
 
-    let reviewers: { id: number; name: string; email: string}[] = []; // Lista dei revisori
+    let reviewers: { id: number; first_name: string; last_name: string; email: string}[] = []; // Lista dei revisori
     let newReviewerEmail = ''; // Email del nuovo revisore da aggiungere
     let comments = ''; // Area per commenti (placeholder per futura implementazione)
 
@@ -60,32 +61,34 @@
 
     async function fetchReviewData() {
         try {
-            // Verifica che il paper sia disponibile
-            if (!$paper) {
-                throw new Error('Paper non trovato nel store!');
-            }
-
-            // Effettua una chiamata GET al backend
-            const response = await fetch(`http://localhost:8000/reviewers/${$paper.id}`, {
-                method: 'GET',
-                credentials: 'include', // Per includere i cookie nella richiesta
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
+            const response = await fetch(
+                `http://localhost:8000/assign_paper_reviewers/get_reviewers/paper/${$paper?.id}/conference/${$conference?.id}`, 
+                {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include'
+                }
+            );
 
             if (!response.ok) {
-                throw new Error(`Errore nella richiesta: ${response.statusText}`);
+                if (response.status === 404) {
+                    throw new Error("Il paper o i revisori non sono stati trovati.");
+                }
+                if (response.status === 403) {
+                    throw new Error("Non sei autorizzato a vedere i revisori.");
+                }
+                throw new Error("Errore nella richiesta.");
             }
 
-            // Recupera i dati e aggiorna la lista dei revisori
             const data = await response.json();
-            reviewers = data.reviewers; // Supponendo che il backend restituisca un array di revisori
-
-            console.log('Revisori:', reviewers);
-        } catch (error) {
+            console.log('Revisori:', data.reviewers);
+            reviewers = data.reviewers;     //SE L'AUTORE E' REVISORE, NON PUò MODIFICARE I DATI
+          } catch (error) {
             console.error('Errore nel recupero dei revisori:', error);
         }
+
     }
 
 
@@ -126,6 +129,7 @@
 
             newReviewerEmail = ''; // Resetta il campo di input
             console.log('Revisore aggiunto:', newReviewer);
+            fetchReviewData();
         } catch (error) {
             console.error('Errore nell\'aggiunta del revisore:', error);
             alert('Errore nell\'aggiunta del revisore. Riprova.');
@@ -283,28 +287,63 @@
 
 
 
-    function dispatch(eventName: string, detail: any) {
-        // Utilizzo di `dispatchEvent` direttamente
-        const event = new CustomEvent(eventName, { detail });
-        dispatchEvent(event);
-    }
+ 
 
     
 
 
+   
+
+
+    let paperReviews: { name: string ; surname: string; evaluation: number; comment: string}[] = []; // Lista dei revisori
+
+    export async function fetchPaperReviews() {
+        try {
+            const response = await fetch(`http://localhost:8000/reviews/get_paper_reviews/?paper_id=${$paper?.id}&page=${1}&page_size=${50}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include', // Include i cookie per autenticazione, se necessario
+            });
+
+            if (!response.ok) {
+                if (response.status === 400) {
+                    throw new Error("Richiesta non valida. Assicurati di aver specificato un ID paper corretto.");
+                }
+                if (response.status === 405) {
+                    throw new Error("Metodo non permesso. Verifica che la richiesta sia GET.");
+                }
+                throw new Error("Errore durante la richiesta.");
+            }
+
+            const data = await response.json();
+            console.log("recensioni");
+            console.log("Recensioni caricate con successo:", data);
+
+            paperReviews = data.reviews.map((review: any) => ({
+                name: review.user.first_name,
+                surname: review.user.last_name,
+                evaluation: review.score,
+                comment: review.comment_text,
+            }));
+
+            console.log("Recensioni caricate con successo:", data);
+        } catch (error) {
+            console.error("Errore durante il caricamento delle recensioni:", error);
+        }
+    }
+
+
+
+
+
+
+
+
 
     
-    function formatDate(dateStr: string | number | Date) {
-        return new Date(dateStr).toLocaleDateString('it-IT', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-        });
-    }
-    
-    function truncate(text: String, maxLength: number) {
-        return text.length > maxLength ? text.slice(0, maxLength) + '...' : text;
-    }
+   
 </script>
 
 
@@ -326,7 +365,7 @@
       </div>
   
     <!-- Main Content -->
-    {:else if $conference?.roles.includes(Role.Admin) || $conference?.roles.includes(Role.Reviewer)}
+    {:else if $paper?.role.includes(Role.Admin) || $paper?.role.includes(Role.Reviewer)}
         <div class="p-6 bg-base-200 rounded-lg shadow-md">
             {#if currentPaper}
                 <div class="mb-6">
@@ -345,7 +384,7 @@
                 </div>
             {/if}
 
-            {#if $conference?.roles.includes(Role.Admin)}
+            {#if $paper?.role.includes(Role.Admin)}
             <div class="divider">Chair Evaluation</div>
             <div class="flex items-center justify-center space-x-4 mt-4">
                 <!-- Pulsanti di selezione -->
@@ -360,7 +399,7 @@
                     Reject
                 </button>
             </div>
-            {:else if $conference?.roles.includes(Role.Reviewer)}
+            {:else if $paper?.role.includes(Role.Reviewer)}
             <div class="divider">Reviewer Evaluation</div>
             <div class="flex flex-col items-center space-y-4 mt-4">
                 <!-- Label -->
@@ -413,9 +452,9 @@
                             Are you sure you want to evaluate this paper as <strong>{evaluation}</strong>?
                         </p>
                         <div class="modal-action">
-                            {#if $conference?.roles.includes(Role.Admin)}
+                            {#if $paper?.role.includes(Role.Admin)}
                                 <button class="btn btn-success" on:click={() => evaluation && submitEvaluationAdmin(evaluation)}>Confirm Evaluation</button>
-                            {:else if $conference?.roles.includes(Role.Reviewer)}
+                            {:else if $paper?.role.includes(Role.Reviewer)}
                                 <button class="btn btn-success" on:click={() => evaluation && submitEvaluationReviewer(evaluation)}>Confirm Review</button>
                             {/if}
                             <button class="btn btn-outline" on:click={() => { showModal = false; }}>Cancel</button>
@@ -424,37 +463,38 @@
                 </div>
             {/if}
 
-        
-            <div class="divider">Revisori</div>
-        
-            <div class="overflow-x-auto">
-                <table class="table w-full">
-                    <thead>
-                        <tr>
-                            <th>Nome</th>
-                            <th>Email</th>
-                            <th>Azione</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {#each reviewers as reviewer (reviewer.id)}
+            {#if $paper?.role.includes(Role.Admin)}
+                <div class="divider">Revisori</div>
+            
+                <div class="overflow-x-auto">
+                    <table class="table w-full">
+                        <thead>
                             <tr>
-                                <td>{reviewer.name}</td>
-                                <td>{reviewer.email}</td>
-                                <td>
-                                    <button
-                                        class="btn btn-error btn-sm"
-                                        on:click={() => removeReviewer(reviewer.id)}
-                                    >
-                                        Rimuovi
-                                    </button>
-                                </td>
+                                <th>Name</th>
+                                <th>Surname</th>
+                                <th>Email</th>
+                                <th>Action</th>
                             </tr>
-                        {/each}
-                    </tbody>
-                </table>
-            </div>
-            {#if $conference?.roles.includes(Role.Admin)}
+                        </thead>
+                        <tbody>
+                            {#each reviewers as reviewer (reviewer.id)}
+                                <tr>
+                                    <td>{reviewer.first_name}</td>
+                                    <td>{reviewer.last_name}</td>
+                                    <td>{reviewer.email}</td>
+                                    <td>
+                                        <button
+                                            class="btn btn-error btn-sm"
+                                            on:click={() => removeReviewer(reviewer.id)}
+                                        >
+                                            Rimuovi
+                                        </button>
+                                    </td>
+                                </tr>
+                            {/each}
+                        </tbody>
+                    </table>
+                </div>
                 <div class="form-control mt-6">
                     <label class="label" for="newReviewerEmail">
                         <span class="label-text">Aggiungi Revisore</span>
@@ -472,21 +512,44 @@
                         </button>
                     </div>
                 </div>
-            {/if}
         
-            <div class="divider">Commenti</div>
+            <div class="divider">reviews</div>
         
-            <div class="form-control">
-                <textarea
-                    class="textarea textarea-bordered"
-                    placeholder="Inserisci commenti qui..."
-                    bind:value={comments}
-                ></textarea>
+            <div class="reviews-container space-y-6">
+                {#each paperReviews as review, index}
+                    <!-- Card della recensione -->
+                    <div class="card bg-base-100 shadow-md border border-base-300">
+                        <div class="card-body">
+                            <!-- Riga superiore: Nome, Cognome, Valutazione -->
+                            <div class="flex justify-between items-center">
+                                <div class="text-lg font-semibold">
+                                    {review.name} {review.surname}
+                                </div>
+                                <div class="badge badge-primary badge-outline">
+                                    Valutazione: {review.evaluation}/5
+                                </div>
+                            </div>
+            
+                            <!-- Blocco commento -->
+                            <p class="mt-4 text-base text-gray-700">
+                                {review.comment}
+                            </p>
+                        </div>
+                    </div>
+            
+                    <!-- Separatore tra recensioni -->
+                    {#if index < paperReviews.length - 1}
+                        <div class="divider">Fine recensione</div>
+                    {/if}
+                {/each}
             </div>
+            {/if}
+
+            
         </div>
-    {:else if $conference?.roles.includes(Role.Author)}
+    {:else if $paper?.role.includes(Role.Author)}
         <div>
-            inserisci la pagina per l'autore con il pulsante per caricare il paper se non presente o le info riguardo il paper inviato
+            ciao autore! sfortunatame ancora non hai nulla da fare qui :/
         </div>
     <style>
         .divider {
