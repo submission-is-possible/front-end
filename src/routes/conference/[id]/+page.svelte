@@ -911,6 +911,7 @@
                         <th>Paper ID</th>
                         <th>Author</th>
                         <th>Title</th>
+                        <th>Status</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -919,6 +920,7 @@
                           <td>{paper.id}</td>
                           <td>{paper.author}</td>
                           <td>{paper.title}</td>
+                          <td>{paper.status}</td>
                         </tr>
                       {/each}
                     </tbody>
