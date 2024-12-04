@@ -22,7 +22,12 @@ export class Conference {
     }
 }
 
-export function goToConferenceDetail(conference: Conference) {
-    setConference( conference );
-    goto(`/conference/${conference.id}/`);
+export function goToConference(conference: Conference) {
+  setConference( conference );
+  if(conference.deadline < new Date()){
+    goto(`/conference/preference/${conference.id}/`);
   }
+  else{
+    goto(`/conference/detail/${conference.id}/`);
+  }
+}

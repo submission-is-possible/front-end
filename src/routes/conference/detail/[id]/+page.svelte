@@ -1,6 +1,5 @@
-
 <script lang="ts">
-  import type { PageData } from './$types';
+  import type { PageData } from '../[id]/$types';
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { user } from '$stores/userStore';
@@ -236,22 +235,6 @@
     } catch (error) {
       console.error('Errore:', error);
     }
-  }
-
-
-
-  // ^^^^^^^^^ CODICE PER MOCKARE LA PAGINA, è DA MODIFICARE UNA VOLTA FATTO IL BACKEND!!!! ^^^^^^^^^^
-
-
-
-
-  function formatDateForInput(date:Date|undefined): string {
-    if (date == undefined) return'';
-    date = new Date(date);
-    if (isNaN(date.getTime())) {
-      return '';
-    }
-    return date.toISOString().split('T')[0];
   }
 
   function formatDateForDisplay(date: Date|undefined): string {
