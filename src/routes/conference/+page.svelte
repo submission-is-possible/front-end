@@ -1,7 +1,7 @@
 <script lang="ts">
   import { fade } from 'svelte/transition';
   import { onMount } from 'svelte';
-  import { Conference, goToConference} from '$lib/models/conference';
+  import { Conference, goToConferenceDetail} from '$lib/models/conference';
   import ConferenceCard from '$lib/components/ConferenceCard.svelte';
   import { getRoleColor, getRoleAbbreviation } from '$lib/models/role';
   import CreateItemButton from '$lib/components/CreateItemButton.svelte';
@@ -107,7 +107,7 @@
       </thead>
       <tbody>
         {#each conferences as conference}
-          <tr class="hover" on:click={() => goToConference(conference)} style="cursor: pointer;">
+          <tr class="hover" on:click={() => goToConferenceDetail(conference)} style="cursor: pointer;">
             <td>{truncate(conference.title, 20)}</td>
             <td>{truncate(conference.description, 100)}</td>
             <td>

@@ -753,103 +753,137 @@ async function fetchPreferences() {
           </div>
         </div>
       {/if}
-      <div class="mt-8">
-        <h3 class="text-xl font-semibold mb-4">Available Papers</h3>
-        {#if papers && papers.length > 0}
-        <div class="overflow-x-auto">
-  <table class="table table-zebra w-full text-center">
-    <thead>
-      <tr>
-        <th class="px-4 py-2">Paper ID</th>
-        <th class="px-4 py-2">Author</th>
-        <th class="px-4 py-2">Title</th>
-        <th class="px-4 py-2">Preference</th>
-      </tr>
-    </thead>
-    <tbody>
-      {#each papers as paper}
-        <tr class="hover">
-          <td class="px-4 py-2">{paper.id}</td>
-          <td class="px-4 py-2">{paper.author}</td>
-          <td class="px-4 py-2">{paper.title}</td>
-          <td class="px-4 py-2">
-            <button
-              class="btn btn-ghost text-yellow-500"
-              onclick={() => togglePreference(paper.id)}
-              aria-label="Toggle Preference"
-            >
-              {#if preferences.has(paper.id)}
-                <!-- Stella piena -->
-                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="w-6 h-6" viewBox="0 0 24 24">
-                  <path d="M12 .587l3.668 7.435 8.21 1.196-5.938 5.798 1.402 8.187-7.342-3.86-7.342 3.86 1.402-8.187-5.938-5.798 8.21-1.196z" />
-                </svg>
-              {:else}
-                <!-- Stella vuota -->
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" class="w-6 h-6" viewBox="0 0 24 24">
-                  <path d="M12 .587l3.668 7.435 8.21 1.196-5.938 5.798 1.402 8.187-7.342-3.86-7.342 3.86 1.402-8.187-5.938-5.798 8.21-1.196z" />
-                </svg>
-              {/if}
-            </button>
-          </td>
-        </tr>
-      {/each}
-    </tbody>
-  </table>
-</div>
 
-          
-      
-          <!-- Pagination Controls -->
-        <div class="flex justify-center mt-6">
-            <div class="join">
-            <!-- Primo pulsante sempre visibile, solo se non è la pagina corrente -->
-            {#if currentPage > 2}
-                <button class="join-item btn" onclick={() => fetchPapers(1)}>
-                1
-                </button>
-            {/if}
-        
-            <!-- Ellissi se la pagina corrente è abbastanza distante dalla prima pagina -->
-            {#if currentPage > 3}
-                <button class="join-item btn btn-disabled">...</button>
-            {/if}
-        
-            <!-- Pulsante per la pagina precedente se non è la prima pagina -->
-            {#if currentPage > 1}
-                <button class="join-item btn" onclick={() => fetchPapers(currentPage - 1)}>
-                {currentPage - 1}
-                </button>
-            {/if}
-        
-            <!-- Pulsante per la pagina corrente -->
-            <button class="join-item btn btn-active">
-                {currentPage}
-            </button>
-        
-            <!-- Pulsante per la pagina successiva se non è l'ultima pagina -->
-            {#if currentPage < totalPages}
-                <button class="join-item btn" onclick={() => fetchPapers(currentPage + 1)}>
-                {currentPage + 1}
-                </button>
-            {/if}
-        
-            <!-- Ellissi se la pagina corrente è abbastanza distante dall'ultima pagina -->
-            {#if currentPage < totalPages - 2}
-                <button class="join-item btn btn-disabled">...</button>
-            {/if}
-        
-            <!-- Ultimo pulsante sempre visibile, solo se non è la pagina corrente e ci sono più di 2 pagine -->
-            {#if totalPages > 1 && currentPage < totalPages - 1}
-                <button class="join-item btn" onclick={() => fetchPapers(totalPages)}>
-                {totalPages}
-                </button>
-            {/if}
-            </div>
+      {#if $conference && $conference?.roles.includes(Role.Admin)} <!-- blocco dedicato alla visualizzazione admin -->
+        <div class="mt-8 p-6 bg-blue-100 text-blue-900 rounded-lg shadow-md">
+            <h3 class="text-lg font-semibold">
+            Authors and Reviewers are choosing their papers
+            </h3>
+            <p class="mt-2">
+            Please wait until 
+            <span class="font-bold text-blue-700">
+                {$conference?.deadline || 'the specified deadline'}
+            </span> 
+            to intervene.
+            </p>
         </div>
-  
-        {:else}
-          <p class="mt-8">No papers available.</p>
-        {/if}
-      </div>
+
+      {:else if $conference && $conference?.roles.includes(Role.Author)} <!-- blocco di pagina dedicata all'autore -->
+        <div class="mt-8 p-6 bg-green-100 text-green-900 rounded-lg shadow-md flex items-center justify-between">
+            <div>
+            <h3 class="text-lg font-semibold">
+                Ready to share your research?
+            </h3>
+            <p class="mt-2">
+                Submit your papers now to be part of the conference!
+            </p>
+            </div>
+            <button
+                  class="btn btn-primary"
+                  onclick={() => goto('/conference/submissions/submit')}>
+                  Submit a New Paper
+            </button>
+        </div>
+        
+      {:else if $conference && $conference?.roles.includes(Role.Reviewer)} <!-- blocco dedicato alla visualizzazione reviewer -->
+        <div class="mt-8">
+            <h3 class="text-xl font-semibold mb-4">Available Papers</h3>
+            {#if papers && papers.length > 0}
+            <div class="overflow-x-auto">
+            <table class="table table-zebra w-full text-center">
+            <thead>
+            <tr>
+            <th class="px-4 py-2">Paper ID</th>
+            <th class="px-4 py-2">Author</th>
+            <th class="px-4 py-2">Title</th>
+            <th class="px-4 py-2">Preference</th>
+            </tr>
+            </thead>
+            <tbody>
+        {#each papers as paper}
+            <tr class="hover">
+            <td class="px-4 py-2">{paper.id}</td>
+            <td class="px-4 py-2">{paper.author}</td>
+            <td class="px-4 py-2">{paper.title}</td>
+            <td class="px-4 py-2">
+                <button
+                class="btn btn-ghost text-yellow-500"
+                onclick={() => togglePreference(paper.id)}
+                aria-label="Toggle Preference"
+                >
+                {#if preferences.has(paper.id)}
+                    <!-- Stella piena -->
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="w-6 h-6" viewBox="0 0 24 24">
+                    <path d="M12 .587l3.668 7.435 8.21 1.196-5.938 5.798 1.402 8.187-7.342-3.86-7.342 3.86 1.402-8.187-5.938-5.798 8.21-1.196z" />
+                    </svg>
+                {:else}
+                    <!-- Stella vuota -->
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" class="w-6 h-6" viewBox="0 0 24 24">
+                    <path d="M12 .587l3.668 7.435 8.21 1.196-5.938 5.798 1.402 8.187-7.342-3.86-7.342 3.86 1.402-8.187-5.938-5.798 8.21-1.196z" />
+                    </svg>
+                {/if}
+                </button>
+            </td>
+            </tr>
+        {/each}
+        </tbody>
+        </table>
+        </div>
+
+            
+        
+            <!-- Pagination Controls -->
+            <div class="flex justify-center mt-6">
+                <div class="join">
+                <!-- Primo pulsante sempre visibile, solo se non è la pagina corrente -->
+                {#if currentPage > 2}
+                    <button class="join-item btn" onclick={() => fetchPapers(1)}>
+                    1
+                    </button>
+                {/if}
+            
+                <!-- Ellissi se la pagina corrente è abbastanza distante dalla prima pagina -->
+                {#if currentPage > 3}
+                    <button class="join-item btn btn-disabled">...</button>
+                {/if}
+            
+                <!-- Pulsante per la pagina precedente se non è la prima pagina -->
+                {#if currentPage > 1}
+                    <button class="join-item btn" onclick={() => fetchPapers(currentPage - 1)}>
+                    {currentPage - 1}
+                    </button>
+                {/if}
+            
+                <!-- Pulsante per la pagina corrente -->
+                <button class="join-item btn btn-active">
+                    {currentPage}
+                </button>
+            
+                <!-- Pulsante per la pagina successiva se non è l'ultima pagina -->
+                {#if currentPage < totalPages}
+                    <button class="join-item btn" onclick={() => fetchPapers(currentPage + 1)}>
+                    {currentPage + 1}
+                    </button>
+                {/if}
+            
+                <!-- Ellissi se la pagina corrente è abbastanza distante dall'ultima pagina -->
+                {#if currentPage < totalPages - 2}
+                    <button class="join-item btn btn-disabled">...</button>
+                {/if}
+            
+                <!-- Ultimo pulsante sempre visibile, solo se non è la pagina corrente e ci sono più di 2 pagine -->
+                {#if totalPages > 1 && currentPage < totalPages - 1}
+                    <button class="join-item btn" onclick={() => fetchPapers(totalPages)}>
+                    {totalPages}
+                    </button>
+                {/if}
+                </div>
+            </div>
+    
+            {:else}
+            <p class="mt-8">No papers available.</p>
+            {/if}
+        </div>
+      {/if}
     {/if}
 </div>

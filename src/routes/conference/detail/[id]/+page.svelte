@@ -803,11 +803,6 @@
             <div class="mt-8">
               <div class="flex items-center justify-between mb-4">
                 <h3 class="text-xl font-semibold">Papers submitted by You</h3>
-                <button
-                  class="btn btn-primary"
-                  onclick={() => goto('/conference/submissions/submit')}>
-                  Submit a New Paper
-                </button>
               </div>
               {#if AuthorPapers.length > 0}
                 <div class="overflow-x-auto">
