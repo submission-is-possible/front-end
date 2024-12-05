@@ -2,7 +2,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/svelte';
 import { goto } from '$app/navigation';
-import ConferencePage from '../src/routes/conference/[id]/+page.svelte';
+import ConferencePage from '../src/routes/conference/detail/[id]/+page.svelte';
 import { user } from '$stores/userStore';
 import { get } from 'svelte/store';
 import { Conference } from '$lib/models/conference';
@@ -19,6 +19,7 @@ const mockConference : Conference = {
   description: 'Test Description',
   created_at: new Date,
   deadline: new Date,
+  papers_deadline: new Date,
   roles: [Role.Admin],
   user_id: 1
 };
