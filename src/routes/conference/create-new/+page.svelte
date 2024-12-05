@@ -8,6 +8,7 @@ interface FormData {
   admin_id: number;
   deadline: string; // Cambiato a string per supportare il formato yyyy-MM-dd
   description: string;
+  papers_deadline: string;
 }
 
 interface FormInvitations {
@@ -19,6 +20,7 @@ interface FormErrors {
   admin_id?: boolean;
   deadline?: boolean;
   description?: boolean;
+  papers_deadline?: boolean;
   submit?: string;
   csvFile?: string;
 }
@@ -35,7 +37,8 @@ let formData: FormData = {
   title: '',
   admin_id: 0,
   deadline: formatDate(new Date()), // Imposta deadline come stringa formattata
-  description: ''
+  description: '',
+  papers_deadline: formatDate(new Date()) 
 };
 
 let formInvitations: FormInvitations = {
@@ -60,7 +63,10 @@ function validateForm(): boolean {
 
     if (new Date(formData.deadline) < new Date()) {
       errors.deadline = true;
+    }
 
+    if (new Date(formData.papers_deadline) < new Date()) {
+      errors.papers_deadline = true;
     }
 
     return Object.keys(errors).length === 0;
@@ -122,7 +128,8 @@ async function handleSubmit(event: SubmitEvent): Promise < void > {
           title: formData.title,
           deadline: formData.deadline,
           description: formData.description,
-          reviewers: validReviewers
+          reviewers: validReviewers,
+          papers_deadline: formData.papers_deadline
         })
       });
 
@@ -200,16 +207,35 @@ async function handleSubmit(event: SubmitEvent): Promise < void > {
 
     <div class="grid grid-cols-2 gap-4">
       <div>
-        <label for="date" class="label">
-          <span class="label-text">Date</span>
+        <label for="submission-deadline" class="label">
+          <span class="label-text">Submission Deadline</span>
         </label>
-        <input id="date" type="date" class="input input-bordered w-full"
-          bind:value={formData.deadline} data-testid="date-input"/>
-        {#if errors.deadline}
-          <span class="label-text-alt text-error" role="alert" data-testid="date-error">Insert a date</span>
+        <input id="submission-deadline" type="date" class="input input-bordered w-full"
+          bind:value={formData.papers_deadline} data-testid="submission-deadline-input"/>
+        {#if errors.papers_deadline}
+          <span class="label-text-alt text-error" role="alert" data-testid="submission-deadline-error">Insert a submission deadline</span>
         {/if}
       </div>
 
+      <div>
+        <label for="conference-deadline" class="label">
+          <span class="label-text">Conference Date</span>
+        </label>
+        <input id="conference-deadline" type="date" class="input input-bordered w-full"
+          bind:value={formData.deadline} data-testid="conference-deadline-input"/>
+        {#if errors.deadline}
+          <span class="label-text-alt text-error" role="alert" data-testid="conference-deadline-error">Insert a conference date</span>
+        {/if}
+      </div>
+
+      {#if formData.deadline < formData.papers_deadline}
+        <div class="col-span-2">
+          <span class="label-text-alt text-error" role="alert" data-testid="date-error">Conference date must be after submission deadline</span>
+        </div>
+      {/if}
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
       <div>
         <label for="location" class="label">
           <span class="label-text">Location</span>
@@ -351,7 +377,7 @@ async function handleSubmit(event: SubmitEvent): Promise < void > {
     {#if submitStatus === 'error'}
       <div class="alert alert-error mt-4" role="alert">
         <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 018 0z" />
         </svg>
         <span data-testid="conference-creation-error">{errors.submit}</span>
       </div>
@@ -361,7 +387,7 @@ async function handleSubmit(event: SubmitEvent): Promise < void > {
     {#if submitStatus === 'success'}
       <div class="alert alert-success mt-4" role="alert">
         <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 018 0z" />
         </svg>
         <span data-testid="conference-creation-success">Conference created!</span>
       </div>
