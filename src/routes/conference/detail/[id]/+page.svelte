@@ -23,6 +23,7 @@
     title: string;
     deadline: string;
     description: string;
+    papers_deadline: string;
   }
 
   // Funzione per formattare la data nel formato yyyy-MM-dd
@@ -38,7 +39,8 @@
     conference_id: 0,
     title: '',
     deadline: formatDate(new Date()),
-    description: ''
+    description: '',
+    papers_deadline: formatDate(new Date())
   };
 
 
@@ -53,6 +55,7 @@
           title: $conference.title.toString(),
           deadline: formatDate(new Date($conference.deadline)),
           description: $conference.description.toString(),
+          papers_deadline: formatDate(new Date($conference.papers_deadline))
           //user_id: $user.id // Assicurati che user_id sia presente
         };
       }
@@ -319,6 +322,7 @@
           $conference.title = editFormData.title;
           $conference.deadline = new Date(editFormData.deadline);
           $conference.description = editFormData.description;
+          $conference.papers_deadline = new Date(editFormData.papers_deadline);
         }
 
         isEditing = false;
@@ -341,6 +345,10 @@
       error = 'Deadline is required';
       return false;
     }
+    if (!editFormData.papers_deadline) {
+      error = 'Papers deadline is required';
+      return false;
+    }
     if (!editFormData.description.trim()) {
       error = 'Description is required';
       return false;
@@ -351,7 +359,12 @@
       error = 'Invalid deadline date';
       return false;
     }
-    
+    const papersDeadlineDate = new Date(editFormData.papers_deadline);
+    if (isNaN(papersDeadlineDate.getTime())) {
+      error = 'Invalid papers deadline date';
+      return false;
+    }
+
     return true;
   }
 
@@ -363,6 +376,7 @@
     title?: boolean;
     admin_id?: boolean;
     deadline?: boolean;
+    papers_deadline?: boolean;
     description?: boolean;
     submit?: string;
     csvFile?: string;
@@ -424,6 +438,9 @@
   function toggleInfoModal() {
     isInfoModalOpen = !isInfoModalOpen;
   }
+
+
+
 </script>
 
 <div class="container mx-auto p-2 md:p-4">
@@ -499,6 +516,20 @@
                 bind:value={ editFormData.deadline } 
                 class="input input-bordered w-full"
                 data-testid="deadline-input"
+              />
+            </div>
+
+
+            <div class="form-control">
+              <label for="papers-deadline" class="label">
+                <span class="label-text text-lg font-semibold">Papers Deadline</span>
+              </label>
+              <input 
+                id="papers-deadline" 
+                type="date" 
+                bind:value={ editFormData.papers_deadline } 
+                class="input input-bordered w-full"
+                data-testid="papers-deadline-input"
               />
             </div>
             
@@ -715,6 +746,16 @@
                   <p class="text-lg">{formatDateForDisplay($conference?.deadline)}</p>
                 </div>
               </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="card bg-base-200">
+                  <div class="card-body">
+                    <h3 class="card-title">Papers deadline</h3>
+                    <p class="text-lg">{formatDateForDisplay($conference?.papers_deadline)}</p>
+                  </div>
+                </div>
+
+
               <div class="card bg-base-200">
                 <div class="card-body">
                   <h3 class="card-title">Created</h3>
@@ -955,6 +996,7 @@
             </div>
           {/if}
         </div>
+      </div>
       </div>
     {/if}
   {/if}
