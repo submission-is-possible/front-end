@@ -152,16 +152,32 @@ async function fetchPreferences() {
 // Funzione per caricare i paper simulati
 async function fetchPapers(page: number = 1) {
   try {
-    // Simula un ritardo per emulare una richiesta di rete
-    await new Promise((resolve) => setTimeout(resolve, 500));
+        const response = await fetch(`http://localhost:8000/conference/get_all_papers/${$conference?.id}/?page=${page}&page_size=${pageSize}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include', // Include i cookie per autenticazione, se necessario
+        });
 
-    const data = generateMockPapers(page, pageSize);
-    papers = data.papers;
-    currentPage = data.current_page;
-    totalPapers = data.total_papers;
-  } catch (error) {
-    console.error('Errore simulato:', error);
-  }
+        if (!response.ok) {
+            if (response.status === 400) {
+                throw new Error("Richiesta non valida. Assicurati di aver specificato un ID paper corretto.");
+            }
+            if (response.status === 405) {
+                throw new Error("Metodo non permesso. Verifica che la richiesta sia GET.");
+            }
+            throw new Error("Errore durante la richiesta.");
+        }
+
+        const data = await response.json();
+        papers = data.papers;
+        currentPage = data.current_page;
+        totalPapers = data.total_papers;
+        console.log('Papers caricati:', papers);
+    } catch (error) {
+        console.error("Errore durante il caricamento dei papers:", error);
+    }
 }
 
 
@@ -809,8 +825,8 @@ async function togglePreference(paperId: number, preference: string) {
             to intervene.
             </p>
         </div>
-
-      {:else if $conference && $conference?.roles.includes(Role.Author)} <!-- blocco di pagina dedicata all'autore -->
+      {/if}
+      {#if $conference && $conference?.roles.includes(Role.Author)} <!-- blocco di pagina dedicata all'autore -->
         <div class="mt-8 p-6 bg-green-100 text-green-900 rounded-lg shadow-md flex items-center justify-between">
             <div>
             <h3 class="text-lg font-semibold">
@@ -827,8 +843,8 @@ async function togglePreference(paperId: number, preference: string) {
                   Submit a New Paper
             </button>
         </div>
-        
-      {:else if $conference && $conference?.roles.includes(Role.Reviewer)} <!-- blocco dedicato alla visualizzazione reviewer -->
+      {/if}
+      {#if $conference && $conference?.roles.includes(Role.Reviewer)} <!-- blocco dedicato alla visualizzazione reviewer -->
         <div class="mt-8">
             <h3 class="text-xl font-semibold mb-4">Available Papers</h3>
             <h2 class="text-xl font-semibold">Choose the papers you would like to review the best</h2>
