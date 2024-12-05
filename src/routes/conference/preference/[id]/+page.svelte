@@ -68,7 +68,7 @@
     });
   
     // Stato per la paginazione
-    let pageSize: number = 12; // Numero di paper per pagina
+    let pageSize: number = 3; // Numero di paper per pagina
   
     let currentPage: number = 1;
   
@@ -113,7 +113,7 @@ function generateMockPapers(page: number, pageSize: number) {
 // Funzione per caricare le preferenze simulate
 async function fetchPreferences() {
   try {
-        const response = await fetch(`http://localhost:8000/conference/get_preference_papers_in_conference_by_reviewer`, {
+        const response = await fetch(`http://localhost:8000/preferences/get_preference_papers_in_conference_by_reviewer/`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -121,7 +121,7 @@ async function fetchPreferences() {
           credentials:"include",
           body: JSON.stringify({
             id_reviewer: $user?.id,
-            id_conferece: $conference?.id
+            id_conference: $conference?.id
           })
         });
   
@@ -143,6 +143,17 @@ async function fetchPreferences() {
         data.paper_ids_not_interested.forEach((paperId: number) => {
           preferencesMap.set(paperId, 'not_interested');
         });
+
+
+        preferences.update((prefs) => {
+          data.paper_ids_interested.forEach((paperId: number) => {
+            prefs.set(paperId, 'interested');
+          });
+          data.paper_ids_not_interested.forEach((paperId: number) => {
+            prefs.set(paperId, 'not_interested');
+          });
+        return prefs;
+      });
       
   } catch (error) {
     console.error('Errore durante la chiamata al backend:', error);
@@ -172,8 +183,9 @@ async function fetchPapers(page: number = 1) {
 
         const data = await response.json();
         papers = data.papers;
-        currentPage = data.current_page;
-        totalPapers = data.total_papers;
+        currentPage = data.page;
+        totalPapers = data.total;
+        totalPages = data.pages;
         console.log('Papers caricati:', papers);
     } catch (error) {
         console.error("Errore durante il caricamento dei papers:", error);
@@ -183,7 +195,12 @@ async function fetchPapers(page: number = 1) {
 
 async function togglePreference(paperId: number, preference: string) {
   try {
-        const response = await fetch(`http://localhost:8000/preferences/add_preference`, {
+        const currentPreference = $preferences.get(paperId);
+
+      // Determina la nuova preferenza
+        const newPreference = currentPreference === preference ? 'neutral' : preference;
+
+        const response = await fetch(`http://localhost:8000/preferences/add_preference/`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -192,7 +209,7 @@ async function togglePreference(paperId: number, preference: string) {
           body: JSON.stringify({
             id_reviewer: $user?.id,
             id_paper: paperId,
-            type_preference: preference
+            type_preference: newPreference
           })
         });
   
@@ -915,50 +932,50 @@ async function togglePreference(paperId: number, preference: string) {
         
             <!-- Pagination Controls -->
             <div class="flex justify-center mt-6">
-                <div class="join">
-                <!-- Primo pulsante sempre visibile, solo se non è la pagina corrente -->
+              <div class="join">
+                <!-- First page button -->
                 {#if currentPage > 2}
-                    <button class="join-item btn" onclick={() => fetchPapers(1)}>
+                  <button class="join-item btn" onclick={() => fetchPapers(1)}>
                     1
-                    </button>
+                  </button>
                 {/if}
-            
-                <!-- Ellissi se la pagina corrente è abbastanza distante dalla prima pagina -->
+                
+                <!-- Ellipsis if current page is far from first page -->
                 {#if currentPage > 3}
-                    <button class="join-item btn btn-disabled">...</button>
+                  <button class="join-item btn btn-disabled">...</button>
                 {/if}
-            
-                <!-- Pulsante per la pagina precedente se non è la prima pagina -->
+                
+                <!-- Previous page button -->
                 {#if currentPage > 1}
-                    <button class="join-item btn" onclick={() => fetchPapers(currentPage - 1)}>
+                  <button class="join-item btn" onclick={() => fetchPapers(currentPage - 1)}>
                     {currentPage - 1}
-                    </button>
+                  </button>
                 {/if}
-            
-                <!-- Pulsante per la pagina corrente -->
+                
+                <!-- Current page -->
                 <button class="join-item btn btn-active">
-                    {currentPage}
+                  {currentPage}
                 </button>
-            
-                <!-- Pulsante per la pagina successiva se non è l'ultima pagina -->
+                
+                <!-- Next page button -->
                 {#if currentPage < totalPages}
-                    <button class="join-item btn" onclick={() => fetchPapers(currentPage + 1)}>
+                  <button class="join-item btn" onclick={() => fetchPapers(currentPage + 1)}>
                     {currentPage + 1}
-                    </button>
+                  </button>
                 {/if}
-            
-                <!-- Ellissi se la pagina corrente è abbastanza distante dall'ultima pagina -->
+                
+                <!-- Ellipsis if current page is far from last page -->
                 {#if currentPage < totalPages - 2}
-                    <button class="join-item btn btn-disabled">...</button>
+                  <button class="join-item btn btn-disabled">...</button>
                 {/if}
-            
-                <!-- Ultimo pulsante sempre visibile, solo se non è la pagina corrente e ci sono più di 2 pagine -->
+                
+                <!-- Last page button -->
                 {#if totalPages > 1 && currentPage < totalPages - 1}
-                    <button class="join-item btn" onclick={() => fetchPapers(totalPages)}>
+                  <button class="join-item btn" onclick={() => fetchPapers(totalPages)}>
                     {totalPages}
-                    </button>
+                  </button>
                 {/if}
-                </div>
+              </div>
             </div>
     
             {:else}
