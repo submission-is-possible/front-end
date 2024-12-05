@@ -186,13 +186,14 @@
 
 
     let evaluation: 'accepted' | 'rejected' | null = null; // Valutazione selezionata ("accepted" o "rejected")
+    let confidence: number = 0; // Valutazione selezionata ("accepted" o "rejected")
     let showModal = false; // Controlla la visibilità del modale
     const eventDispatcher = createEventDispatcher(); // Per comunicare con il componente genitore
 
 
 
 
-    async function submitEvaluationReviewer(evaluation : string) {
+    async function submitEvaluationReviewer(evaluation : string, confidence : number) {
         
         try {
             const response = await fetch('http://localhost:8000/reviews/create_review/', {
@@ -206,6 +207,7 @@
                     user_id: $user?.id,
                     comment_text: reviewText,
                     score: evaluation,
+                    confidence_level: confidence,
                 }),
             });
 
@@ -295,7 +297,7 @@
    
 
 
-    let paperReviews: { name: string ; surname: string; evaluation: number; comment: string}[] = []; // Lista dei revisori
+    let paperReviews: { name: string ; surname: string; evaluation: number; confidence: number; comment: string}[] = []; // Lista dei revisori
 
     export async function fetchPaperReviews() {
         try {
@@ -325,6 +327,7 @@
                 name: review.user.first_name,
                 surname: review.user.last_name,
                 evaluation: review.score,
+                confidence: review.confidence_level,
                 comment: review.comment_text,
             }));
 
@@ -419,6 +422,23 @@
                 <!-- Visualizzazione del punteggio selezionato -->
                 <p class="text-lg font-bold">Selected Score: {evaluation}</p>
 
+                <!-- Label -->
+                <label for="confidence" class="font-semibold">Score (0-5):</label>
+
+                <!-- Barra di selezione -->
+                <input
+                type="range"
+                id="confidence"
+                min="0"
+                max="5"
+                step="1"
+                class="range range-primary w-64"
+                bind:value={confidence}
+                />
+
+                <!-- Visualizzazione del punteggio selezionato -->
+                <p class="text-lg font-bold">Selected Confidence level: {confidence}</p>
+
                 <!-- Recensione scritta -->
                 <div class="form-control w-full max-w-md">
                     <label class="label" for="reviewText">
@@ -435,7 +455,7 @@
                 <!-- Pulsante di conferma -->
                 <button
                 class="btn btn-outline btn-primary"
-                on:click={() => { evaluation = evaluation; showModal = true; }}>
+                on:click={() => { evaluation = evaluation; confidence = confidence; showModal = true; }}>
                 Submit Score
                 </button>
             </div>
@@ -455,7 +475,7 @@
                             {#if $paper?.role.includes(Role.Admin)}
                                 <button class="btn btn-success" on:click={() => evaluation && submitEvaluationAdmin(evaluation)}>Confirm Evaluation</button>
                             {:else if $paper?.role.includes(Role.Reviewer)}
-                                <button class="btn btn-success" on:click={() => evaluation && submitEvaluationReviewer(evaluation)}>Confirm Review</button>
+                                <button class="btn btn-success" on:click={() => evaluation && confidence && submitEvaluationReviewer(evaluation, confidence)}>Confirm Review</button>
                             {/if}
                             <button class="btn btn-outline" on:click={() => { showModal = false; }}>Cancel</button>
                         </div>
@@ -527,6 +547,9 @@
                                 </div>
                                 <div class="badge badge-primary badge-outline">
                                     Valutazione: {review.evaluation}/5
+                                </div>
+                                <div class="badge badge-primary badge-outline">
+                                    Confidence: {review.confidence}/5
                                 </div>
                             </div>
             
