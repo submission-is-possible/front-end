@@ -228,7 +228,7 @@ async function handleSubmit(event: SubmitEvent): Promise < void > {
         {/if}
       </div>
 
-      {#if formData.deadline < formData.papers_deadline}
+      {#if formData.deadline <= formData.papers_deadline}
         <div class="col-span-2">
           <span class="label-text-alt text-error" role="alert" data-testid="date-error">Conference date must be after submission deadline</span>
         </div>
