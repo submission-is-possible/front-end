@@ -40,7 +40,7 @@
             }
             if($paper?.role.includes(Role.Reviewer)){
                 fetchReviewData();
-                hasBeenReviewd();
+                hasBeenReviewed();
             }
         } catch (err) {
             error = 'Error loading conference details';
@@ -53,9 +53,9 @@
 
     let been_reviewed = false;
 
-    async function hasBeenReviewd() {
+    async function hasBeenReviewed() {
         try {
-            const response = await fetch(`http://localhost:8000/reviews/has_been_reviewed/`, {
+            const response = await fetch(`http://localhost:8000/reviews/hasbeenreviewed/`, {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
@@ -71,7 +71,6 @@
             if (!response.ok) {
                 throw new Error("Errore nella richiesta.");
             }
-
             const data = await response.json();
             been_reviewed= data.has_been_reviewed;
           } catch (error) {
@@ -431,7 +430,8 @@
                     Reject
                 </button>
             </div>
-            {:else if $paper?.role.includes(Role.Reviewer) && !been_reviewed}
+            {:else if $paper?.role.includes(Role.Reviewer)}
+            {#if !been_reviewed}
             <div class="divider">Reviewer Evaluation</div>
             <div class="flex flex-col items-center space-y-4 mt-4">
                 <!-- Label -->
@@ -488,6 +488,11 @@
                 Submit Score
                 </button>
             </div>
+            {:else}
+            <div class="alert alert-warning">
+                <span>You have already reviewed this paper</span>
+            </div>
+            {/if}
             {/if}
             
 
