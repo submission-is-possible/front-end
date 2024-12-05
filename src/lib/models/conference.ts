@@ -26,7 +26,7 @@ export class Conference {
 
 export function goToConferenceDetail(conference: Conference) {
   setConference( conference );
-  const deadlineDate = new Date(conference.deadline);
+  const deadlineDate = new Date(conference.paper_deadline);
   if(deadlineDate > new Date()){
     goto(`/conference/preference/${conference.id}/`);
   }

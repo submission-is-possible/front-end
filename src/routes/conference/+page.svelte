@@ -117,7 +117,7 @@
               {/each}
             </td>
             <td>{formatDate(conference.created_at)}</td>
-            <td>{formatDate(conference.paper_deadline)}</td>
+            <td>{formatDate(conference.papers_deadline)}</td>
             <td>{formatDate(conference.deadline)}</td>
           </tr>
         {/each}
