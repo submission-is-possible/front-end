@@ -804,7 +804,7 @@ async function togglePreference(paperId: number, preference: string) {
             <p class="mt-2">
             Please wait until 
             <span class="font-bold text-blue-700">
-                {$conference?.deadline || 'the specified deadline'}
+                {formatDateForDisplay($conference?.deadline || 'the specified deadline')}
             </span> 
             to intervene.
             </p>
@@ -816,7 +816,7 @@ async function togglePreference(paperId: number, preference: string) {
             <h3 class="text-lg font-semibold">
                 Ready to share your research?
             </h3>
-            <h1 class="text-xl font-semibold">Make sure you send your papers by {$conference?.papers_deadline}</h1>
+            <h1 class="text-xl font-semibold">Make sure you send your papers by {formatDateForDisplay($conference?.papers_deadline)}</h1>
             <p class="mt-2">
                 Submit your papers now to be part of the conference!
             </p>

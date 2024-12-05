@@ -40,7 +40,9 @@ describe("fetch conference list", () => {
 
         await fireEvent.input(screen.getByTestId('title-input'), { target: { value: 'test1' } });
         await fireEvent.input(screen.getByTestId('description-input'), { target: { value: 'test1' } });
-        await fireEvent.input(screen.getByTestId('date-input'), { target: { value: '9999-01-01' } });
+        await fireEvent.input(screen.getByTestId('conference-deadline-input'), { target: { value: '9999-01-01' } });
+        await fireEvent.input(screen.getByTestId('submission-deadline-input'), { target: { value: '9998-01-01' } });
+
 
         await fireEvent.submit(screen.getByTestId('create-button'));
 
