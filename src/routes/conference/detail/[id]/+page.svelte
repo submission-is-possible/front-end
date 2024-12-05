@@ -6,6 +6,7 @@
   import { conference } from '$stores/conferenceStore'
   import {Role} from '$lib/models/role';
   import { Paper, goToPaperDetail } from '$lib/models/paper';
+    import { paper } from '$stores/paperStore';
   export let data: PageData;
 
   //let conference: Conference | null = null;

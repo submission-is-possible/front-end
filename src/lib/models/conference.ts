@@ -9,14 +9,16 @@ export class Conference {
     description : String;
     created_at : Date;
     deadline: Date;
+    paper_deadline: Date;
     roles: Role[];
 
-    constructor(id: Number, creator_id: Number, title : String, created_at : Date, deadline: Date, description : String, roles:Role[]){
+    constructor(id: Number, creator_id: Number, title : String, created_at : Date, deadline: Date, paper_deadline: Date, description : String, roles:Role[]){
         this.id = id;
         this.user_id = creator_id;
         this.title = title;
         this.created_at = new Date(created_at);
         this.deadline = new Date(deadline);
+        this.paper_deadline = new Date(paper_deadline);
         this.description = description;
         this.roles = roles;
     }

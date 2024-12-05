@@ -7,6 +7,7 @@
     import {Role} from '$lib/models/role';
     import { Paper, goToPaperDetail } from '$lib/models/paper';
     export let data: PageData;
+    import { writable } from 'svelte/store';
   
     //let conference: Conference | null = null;
     let isEditing = false;
@@ -17,7 +18,7 @@
     let creatorId: number | null = null;
     let adminData: any = null; 
     let papers: Paper[] = [];
-    let preferences = new Set();
+    let preferences = writable(new Map());
   
     interface ConferenceFormData {
       conference_id: Number;
@@ -82,17 +83,6 @@
     $: totalPages = Math.ceil(totalPapers / pageSize);
 
 
-
-
-
-
-
-
-
-
-
-
-
     // Funzione per generare dati simulati dei paper
 function generateMockPapers(page: number, pageSize: number) {
   const totalPapers = 50; // Numero totale di paper simulati
@@ -119,19 +109,44 @@ function generateMockPapers(page: number, pageSize: number) {
   };
 }
 
-// Funzione per generare preferenze simulate
-function generateMockPreferences() {
-  const totalPapers = 50; // Assumiamo di avere 50 paper in totale
-  const preferredPaperIds = new Set<number>();
 
-  // Aggiungi preferenze casuali (max 10 paper)
-  while (preferredPaperIds.size < 10) {
-    preferredPaperIds.add(Math.floor(Math.random() * totalPapers) + 1);
+// Funzione per caricare le preferenze simulate
+async function fetchPreferences() {
+  try {
+        const response = await fetch(`http://localhost:8000/conference/get_preference_papers_in_conference_by_reviewer`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials:"include",
+          body: JSON.stringify({
+            id_reviewer: $user?.id,
+            id_conferece: $conference?.id
+          })
+        });
+  
+        if (!response.ok) {
+          if (response.status === 403) {
+            throw new Error("Non sei autorizzato a vedere questi dati.");
+          }
+          if (response.status === 400) {
+            throw new Error("Richiesta non valida.");
+          }
+          throw new Error("Errore nella richiesta.");
+        }
+
+        const data = await response.json();
+        const preferencesMap = new Map();
+        data.paper_ids_interested.forEach((paperId: number) => {
+          preferencesMap.set(paperId, 'interested');
+        });
+        data.paper_ids_not_interested.forEach((paperId: number) => {
+          preferencesMap.set(paperId, 'not_interested');
+        });
+      
+  } catch (error) {
+    console.error('Errore durante la chiamata al backend:', error);
   }
-
-  return {
-    preferences: Array.from(preferredPaperIds).map((paperId) => ({ paperId })),
-  };
 }
 
 // Funzione per caricare i paper simulati
@@ -149,19 +164,48 @@ async function fetchPapers(page: number = 1) {
   }
 }
 
-// Funzione per caricare le preferenze simulate
-async function fetchPreferences() {
+
+async function togglePreference(paperId: number, preference: string) {
   try {
-    // Simula un ritardo per emulare una richiesta di rete
-    await new Promise((resolve) => setTimeout(resolve, 500));
+        const response = await fetch(`http://localhost:8000/preferences/add_preference`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials:"include",
+          body: JSON.stringify({
+            id_reviewer: $user?.id,
+            id_paper: paperId,
+            type_preference: preference
+          })
+        });
+  
+        if (!response.ok) {
+          if (response.status === 403) {
+            throw new Error("Non sei autorizzato a vedere questi dati.");
+          }
+          if (response.status === 400) {
+            throw new Error("Richiesta non valida.");
+          }
+          throw new Error("Errore nella richiesta.");
+        }
+        const data = await response.json();
+        preferences.update((prefs) => {
+        const currentPreference = prefs.get(paperId);
 
-    const data = generateMockPreferences();
-    preferences = new Set(data.preferences.map((pref) => pref.paperId));
-  } catch (error) {
-    console.error('Errore simulato:', error);
-  }
+        // Se clicchiamo di nuovo sul pulsante già attivo, resettare a "neutral"
+        if (currentPreference === preference) {
+          prefs.set(paperId, 'neutral');
+        } else {
+          prefs.set(paperId, preference);
+        }
+        console.log('Stato aggiornato:', Array.from(prefs.entries()));
+        return prefs;
+      });
+      } catch (error) {
+        console.error('Errore:', error);
+      }
 }
-
   
   
     /* async function fetchPapers(page: number = 1) {
@@ -229,37 +273,35 @@ async function fetchPreferences() {
       }
     } */
 
-  // Aggiungi o rimuovi preferenza
-  async function togglePreference(paperId: number) {
-    const isPreferred = preferences.has(paperId);
+    async function setPreference(paperId: number, preference: string) {
+      const currentPreference = $preferences.get(paperId) || 'neutral';
 
-    try {
-        const response = await fetch(`http://localhost:8000/conference/express_preference`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials:"include",
-          body: JSON.stringify({
-            user_id: $user?.id,
-            conference_id: $conference?.id,
-            paper_id: paperId,
-          })
-        });
-
-      if (response.ok) {
-        if (isPreferred) {
-          preferences.delete(paperId);
-        } else {
-          preferences.add(paperId);
-        }
-      } else {
-        console.error("Errore durante l'aggiornamento della preferenza.");
+      // Selezione "neutral" per rimuovere la preferenza attuale
+      if (currentPreference === preference) {
+        preference = 'neutral';
       }
-    } catch (error) {
-      console.error("Errore durante l'aggiornamento della preferenza:", error);
+
+      // Simulazione del comportamento del backend
+      console.log(`Simulazione: impostazione preferenza per paper ${paperId} a '${preference}'`);
+      await new Promise((resolve) => setTimeout(resolve, 500)); // Simula un ritardo per testare l'interfaccia
+
+      // Aggiorna lo stato locale
+      if (preference === 'neutral') {
+        preferences.update(prefs => {
+          prefs.delete(paperId);
+          return prefs;
+        });
+      } else {
+        preferences.update(prefs => {
+          prefs.set(paperId, preference);
+          return prefs;
+        });
+      }
+
+      preferences.subscribe(prefs => {
+        console.log('Stato aggiornato localmente:', Array.from(prefs.entries()));
+      })();
     }
-  }
   
   
     function formatDateForDisplay(date: Date|undefined): string {
@@ -774,6 +816,7 @@ async function fetchPreferences() {
             <h3 class="text-lg font-semibold">
                 Ready to share your research?
             </h3>
+            <h1 class="text-xl font-semibold">Make sure you send your papers by {$conference?.paper_deadline}</h1>
             <p class="mt-2">
                 Submit your papers now to be part of the conference!
             </p>
@@ -788,6 +831,7 @@ async function fetchPreferences() {
       {:else if $conference && $conference?.roles.includes(Role.Reviewer)} <!-- blocco dedicato alla visualizzazione reviewer -->
         <div class="mt-8">
             <h3 class="text-xl font-semibold mb-4">Available Papers</h3>
+            <h2 class="text-xl font-semibold">Choose the papers you would like to review the best</h2>
             {#if papers && papers.length > 0}
             <div class="overflow-x-auto">
             <table class="table table-zebra w-full text-center">
@@ -800,32 +844,53 @@ async function fetchPreferences() {
             </tr>
             </thead>
             <tbody>
-        {#each papers as paper}
-            <tr class="hover">
-            <td class="px-4 py-2">{paper.id}</td>
-            <td class="px-4 py-2">{paper.author}</td>
-            <td class="px-4 py-2">{paper.title}</td>
-            <td class="px-4 py-2">
-                <button
-                class="btn btn-ghost text-yellow-500"
-                onclick={() => togglePreference(paper.id)}
-                aria-label="Toggle Preference"
-                >
-                {#if preferences.has(paper.id)}
-                    <!-- Stella piena -->
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="w-6 h-6" viewBox="0 0 24 24">
-                    <path d="M12 .587l3.668 7.435 8.21 1.196-5.938 5.798 1.402 8.187-7.342-3.86-7.342 3.86 1.402-8.187-5.938-5.798 8.21-1.196z" />
-                    </svg>
-                {:else}
-                    <!-- Stella vuota -->
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" class="w-6 h-6" viewBox="0 0 24 24">
-                    <path d="M12 .587l3.668 7.435 8.21 1.196-5.938 5.798 1.402 8.187-7.342-3.86-7.342 3.86 1.402-8.187-5.938-5.798 8.21-1.196z" />
-                    </svg>
-                {/if}
-                </button>
-            </td>
-            </tr>
-        {/each}
+              {#each papers as paper}
+                <tr class="hover">
+                  <td class="px-4 py-2">{paper.id}</td>
+                  <td class="px-4 py-2">{paper.author}</td>
+                  <td class="px-4 py-2">{paper.title}</td>
+                  <td class="px-4 py-2 flex items-center gap-2">
+                    <!-- Pollice su -->
+                    <button
+                      class="btn btn-ghost text-green-500"
+                      onclick={() => togglePreference(paper.id, 'interested')}
+                      aria-label="Mark as Interested"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="w-6 h-6"
+                        fill={$preferences.get(paper.id) === 'interested' ? 'currentColor' : 'none'}
+                        stroke="currentColor"
+                        stroke-width="2"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M12 4l-8 8h5v4h6v-4h5l-8-8z" />
+                      </svg>
+                    </button>
+
+                    <!-- Pollice giù -->
+                    <button
+                      class="btn btn-ghost text-red-500"
+                      onclick={() => togglePreference(paper.id, 'not_interested')}
+                      aria-label="Mark as Not Interested"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="w-6 h-6"
+                        fill={$preferences.get(paper.id) === 'not_interested' ? 'currentColor' : 'none'}
+                        stroke="currentColor"
+                        stroke-width="2"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M12 20l8-8h-5v-4h-6v4h-5l8 8z" />
+                      </svg>
+                    </button>
+                  </td>
+                </tr>
+              {/each}
+
+
+
         </tbody>
         </table>
         </div>
