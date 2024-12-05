@@ -68,7 +68,7 @@
     });
   
     // Stato per la paginazione
-    let pageSize: number = 3; // Numero di paper per pagina
+    let pageSize: number = 12; // Numero di paper per pagina
   
     let currentPage: number = 1;
   
@@ -240,72 +240,6 @@ async function togglePreference(paperId: number, preference: string) {
       }
 }
   
-  
-    /* async function fetchPapers(page: number = 1) {
-      try {
-        const response = await fetch(`http://localhost:8000/conference/get_paper_inconference_admin/?page=${page}&page_size=${pageSize}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials:"include",
-          body: JSON.stringify({
-            user_id: $user?.id,
-            conference_id: $conference?.id
-          })
-        });
-  
-        if (!response.ok) {
-          if (response.status === 403) {
-            throw new Error("Non sei autorizzato a vedere questi dati.");
-          }
-          if (response.status === 400) {
-            throw new Error("Richiesta non valida.");
-          }
-          throw new Error("Errore nella richiesta.");
-        }
-  
-        const data = await response.json();
-        Papers = data.papers;
-        currentPage = data.current_page;
-        totalPapers = data.total_papers;
-      } catch (error) {
-        console.error('Errore:', error);
-      }
-    }
-
-
-    // Funzione per caricare le preferenze
-    async function fetchPreferences() {
-      try {
-        const response = await fetch(`http://localhost:8000/conference/get_paper_inconference_admin`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials:"include",
-          body: JSON.stringify({
-            user_id: $user?.id,
-            conference_id: $conference?.id
-          })
-        });
-  
-        if (!response.ok) {
-          if (response.status === 403) {
-            throw new Error("Non sei autorizzato a vedere questi dati.");
-          }
-          if (response.status === 400) {
-            throw new Error("Richiesta non valida.");
-          }
-          throw new Error("Errore nella richiesta.");
-        }
-        const data = await response.json();
-        preferences = new Set(data.preferences.map((pref: { paperId: number }) => pref.paperId));
-      } catch (error) {
-        console.error('Errore:', error);
-      }
-    } */
-
     async function setPreference(paperId: number, preference: string) {
       const currentPreference = $preferences.get(paperId) || 'neutral';
 
