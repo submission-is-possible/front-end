@@ -19,6 +19,7 @@ const mockConference : Conference = {
   description: 'Test Description',
   created_at: new Date,
   deadline: new Date,
+  papers_deadline: new Date,
   roles: [Role.Admin],
   user_id: 1
 };
