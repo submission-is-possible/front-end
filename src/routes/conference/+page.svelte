@@ -102,6 +102,7 @@
           <th>Description</th>
           <th>Roles</th>
           <th>Created At</th>
+          <th>Paper Deadline</th>
           <th>Deadline</th>
         </tr>
       </thead>
@@ -116,6 +117,7 @@
               {/each}
             </td>
             <td>{formatDate(conference.created_at)}</td>
+            <td>{formatDate(conference.papers_deadline)}</td>
             <td>{formatDate(conference.deadline)}</td>
           </tr>
         {/each}

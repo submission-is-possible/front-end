@@ -9,20 +9,28 @@ export class Conference {
     description : String;
     created_at : Date;
     deadline: Date;
+    papers_deadline: Date;
     roles: Role[];
 
-    constructor(id: Number, creator_id: Number, title : String, created_at : Date, deadline: Date, description : String, roles:Role[]){
+    constructor(id: Number, creator_id: Number, title : String, created_at : Date, deadline: Date, papers_deadline: Date, description : String, roles:Role[]){
         this.id = id;
         this.user_id = creator_id;
         this.title = title;
         this.created_at = new Date(created_at);
         this.deadline = new Date(deadline);
+        this.papers_deadline = new Date(papers_deadline);
         this.description = description;
         this.roles = roles;
     }
 }
 
 export function goToConferenceDetail(conference: Conference) {
-    setConference( conference );
-    goto(`/conference/${conference.id}/`);
+  setConference( conference );
+  const deadlineDate = new Date(conference.papers_deadline);
+  if(deadlineDate > new Date()){
+    goto(`/conference/preference/${conference.id}/`);
   }
+  else{
+    goto(`/conference/detail/${conference.id}/`);
+  }
+}
