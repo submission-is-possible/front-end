@@ -204,34 +204,52 @@
     }
   }
 
-  async function auto_assign() {
-    try {
-      const response = await fetch(`http://localhost:8000/conference/automatic_assign_reviewers/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          user_id: $user?.id,
-          conference_id: $conference?.id,
-          max_papers_per_reviewer: maxPapersPerReviewer,
-          required_reviewers_per_paper : reviewersPerPaper
-        })
-      });
+let errorMessage = ""; // Per i messaggi di errore
+let successMessage = ""; // Per i messaggi di successo
 
-      if (!response.ok) {
-        if (response.status === 400) {
-          throw new Error("Richiesta non valida.");
-        }
-        throw new Error("Errore nella richiesta.");
+async function auto_assign() {
+  try {
+    // Reset messaggi
+    errorMessage = "";
+    successMessage = "";
+
+    const response = await fetch(`http://localhost:8000/conference/automatic_assign_reviewers/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        user_id: $user?.id,
+        conference_id: $conference?.id,
+        max_papers_per_reviewer: maxPapersPerReviewer,
+        required_reviewers_per_paper: reviewersPerPaper
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      if (errorData.error) {
+        errorMessage = errorData.error; // Salvo il messaggio di errore
+      } else {
+        errorMessage = "An unexpected error occurred.";
       }
-
-      const data = await response.json();
-      automatic_assign = true;
-    } catch (error) {
-      console.error('Errore:', error);
+      throw new Error(errorMessage);
     }
+
+    const data = await response.json();
+    automatic_assign = true;
+
+    // Mostra un messaggio di successo
+    successMessage = "Reviewers assigned successfully!";
+
+    // Chiudi il modale
+    const modal = document.getElementById('assignmentModal');
+    if (modal) (modal as HTMLInputElement).checked = false;
+  } catch (error) {
+    console.error('Errore:', error);
   }
+}
+
 
   async function fetchReviewerPapers(page: number = 1) {
     try {
@@ -834,6 +852,11 @@
 
           {#if isAdmin} <!-- mostra i papers se si entra come program chair -->
           <div class="my-4">
+            {#if successMessage}
+              <div class="alert alert-success my-2">{successMessage}</div>
+            {/if}
+          
+            <!-- modale assegnamento automatico -->
             {#if !automatic_assign}
               <button
                 class="btn btn-primary"
@@ -874,6 +897,10 @@
                       min="1"
                     />
                   </div>
+                  <!-- Messaggio di errore -->
+                  {#if errorMessage}
+                    <div class="text-error mt-2">{errorMessage}</div>
+                  {/if}
                 </div>
                 <div class="modal-action">
                   <button
@@ -896,7 +923,7 @@
                 </div>
               </div>
             </div>
-          </div>
+          </div>          
             <div class="mt-8">
               <h3 class="text-xl font-semibold mb-4">Submitted Papers</h3>
               {#if AdminPapers && AdminPapers.length > 0}
