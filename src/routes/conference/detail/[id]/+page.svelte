@@ -94,8 +94,14 @@
   let totalAuthorPapers: number = 0;
   let totalReviewerPapers: number = 0;
 
+  let automatic_assign: boolean = false;
+
   //serve per gestire lo stato del modal (info del csv)
   let isInfoModalOpen = false;
+
+  export let automatic_Assignment = false;
+  let reviewersPerPaper = 1;
+  let maxPapersPerReviewer = 1;
   
   // Calcola il totale delle pagine
   $: totalAdminPages = Math.ceil(totalAdminPapers / pageSize);
@@ -105,6 +111,7 @@
 
   $: if (isAdmin) {
     fetchAdminPapers();
+    getAssignStatus();
   }
 
   function goToAdminPage(page: number) {
@@ -165,6 +172,84 @@
       console.error('Errore:', error);
     }
   }
+
+  async function getAssignStatus() {
+    try {
+      const response = await fetch(`http://localhost:8000/conference/get_automatic_assign_status/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials:"include",
+        body: JSON.stringify({
+          conference_id: $conference?.id
+        })
+      });
+
+      if (!response.ok) {
+        if (response.status === 403) {
+          throw new Error("Non sei autorizzato a vedere questi dati.");
+        }
+        if (response.status === 400) {
+          throw new Error("Richiesta non valida.");
+        }
+        throw new Error("Errore nella richiesta.");
+      }
+
+      const data = await response.json();
+      automatic_assign = data.automatic_assign_status;
+    
+    } catch (error) {
+      console.error('Errore:', error);
+    }
+  }
+
+let errorMessage = ""; // Per i messaggi di errore
+let successMessage = ""; // Per i messaggi di successo
+
+async function auto_assign() {
+  try {
+    // Reset messaggi
+    errorMessage = "";
+    successMessage = "";
+
+    const response = await fetch(`http://localhost:8000/conference/automatic_assign_reviewers/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        user_id: $user?.id,
+        conference_id: $conference?.id,
+        max_papers_per_reviewer: maxPapersPerReviewer,
+        required_reviewers_per_paper: reviewersPerPaper
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      if (errorData.error) {
+        errorMessage = errorData.error; // Salvo il messaggio di errore
+      } else {
+        errorMessage = "An unexpected error occurred.";
+      }
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+    automatic_assign = true;
+
+    // Mostra un messaggio di successo
+    successMessage = "Reviewers assigned successfully!";
+
+    // Chiudi il modale
+    const modal = document.getElementById('assignmentModal');
+    if (modal) (modal as HTMLInputElement).checked = false;
+  } catch (error) {
+    console.error('Errore:', error);
+  }
+}
+
 
   async function fetchReviewerPapers(page: number = 1) {
     try {
@@ -766,6 +851,79 @@
           </div>
 
           {#if isAdmin} <!-- mostra i papers se si entra come program chair -->
+          <div class="my-4">
+            {#if successMessage}
+              <div class="alert alert-success my-2">{successMessage}</div>
+            {/if}
+          
+            <!-- modale assegnamento automatico -->
+            {#if !automatic_assign}
+              <button
+                class="btn btn-primary"
+                onclick={() => {
+                  const modal = document.getElementById('assignmentModal');
+                  if (modal) (modal as HTMLInputElement).checked = true;
+                }}
+              >
+                Automatically Assign Papers
+              </button>
+            {/if}
+          
+            <!-- Modale DaisyUI -->
+            <input type="checkbox" id="assignmentModal" class="modal-toggle" />
+            <div class="modal">
+              <div class="modal-box">
+                <h3 class="font-bold text-lg">Automatic Assignment Settings</h3>
+                <div class="mt-4 space-y-4">
+                  <div>
+                    <label class="label">
+                      <span class="label-text">Number of Reviewers per Paper</span>
+                    </label>
+                    <input
+                      type="number"
+                      class="input input-bordered w-full"
+                      bind:value={reviewersPerPaper}
+                      min="1"
+                    />
+                  </div>
+                  <div>
+                    <label class="label">
+                      <span class="label-text">Max Papers per Reviewer</span>
+                    </label>
+                    <input
+                      type="number"
+                      class="input input-bordered w-full"
+                      bind:value={maxPapersPerReviewer}
+                      min="1"
+                    />
+                  </div>
+                  <!-- Messaggio di errore -->
+                  {#if errorMessage}
+                    <div class="text-error mt-2">{errorMessage}</div>
+                  {/if}
+                </div>
+                <div class="modal-action">
+                  <button
+                    class="btn btn-secondary"
+                    onclick={() => {
+                      const modal = document.getElementById('assignmentModal');
+                      if (modal) (modal as HTMLInputElement).checked = false;
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    class="btn btn-primary"
+                    onclick={() => {
+                      auto_assign();
+                    }}
+                  >
+                    Confirm
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>          
             <div class="mt-8">
               <h3 class="text-xl font-semibold mb-4">Submitted Papers</h3>
               {#if AdminPapers && AdminPapers.length > 0}
