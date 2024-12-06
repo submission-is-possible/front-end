@@ -25,6 +25,7 @@
       title: string;
       deadline: string;
       description: string;
+      papers_deadline: string;
     }
   
     // Funzione per formattare la data nel formato yyyy-MM-dd
@@ -40,7 +41,8 @@
       conference_id: 0,
       title: '',
       deadline: formatDate(new Date()),
-      description: ''
+      description: '',
+      papers_deadline: formatDate(new Date())
     };
   
   
@@ -55,10 +57,13 @@
             title: $conference.title.toString(),
             deadline: formatDate(new Date($conference.deadline)),
             description: $conference.description.toString(),
+            papers_deadline: formatDate(new Date($conference.papers_deadline))
           };
         }
-        fetchPapers();
-        fetchPreferences();
+        if($conference && $conference.roles.includes(Role.Reviewer)){
+          fetchPapers();
+          fetchPreferences();
+        }
       } catch (err) {
         error = 'Error loading conference details';
         console.error('Error in onMount:', err);
@@ -81,33 +86,6 @@
     let isInfoModalOpen = false;
     
     $: totalPages = Math.ceil(totalPapers / pageSize);
-
-
-    // Funzione per generare dati simulati dei paper
-function generateMockPapers(page: number, pageSize: number) {
-  const totalPapers = 50; // Numero totale di paper simulati
-  const start = (page - 1) * pageSize;
-  const end = start + pageSize;
-
-  const papers = Array.from({ length: totalPapers }, (_, i) => ({
-      id: i + 1,
-      title: `Paper Title ${i + 1}`,
-      author: `Author ${i + 1}`,
-      paper_file: '',
-      conference: i + 1,
-      conference_title: '',
-      status: '',
-      submission_date: new Date().toISOString(),
-      created_at: new Date().toISOString(),
-      role: Role.Author
-    })).slice(start, end);
-
-  return {
-    papers,
-    current_page: page,
-    total_papers: totalPapers,
-  };
-}
 
 
 // Funzione per caricare le preferenze simulate
@@ -271,48 +249,46 @@ async function togglePreference(paperId: number, preference: string) {
     }
   
 
-    export let automatic_assign = false;
-  let reviewersPerPaper = 1;
-  let maxPapersPerReviewer = 1;
-  
-    async function auto_assign() {
-    try {
+export let automatic_assign = false;
+let reviewersPerPaper = 1;
+let maxPapersPerReviewer = 1;
+let errorMessage = ""; // Variabile per mostrare messaggi di errore
 
+async function auto_assign() {
+  try {
+    // Reset del messaggio di errore
+    errorMessage = "";
 
-      console.log(JSON.stringify({
+    const response = await fetch(`http://localhost:8000/conference/automatic_assign_reviewers/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
         user_id: $user?.id,
         conference_id: $conference?.id,
         max_papers_per_reviewer: maxPapersPerReviewer,
-        required_reviewers_per_paper : reviewersPerPaper
-      }));
+        required_reviewers_per_paper: reviewersPerPaper
+      })
+    });
 
-
-      const response = await fetch(`http://localhost:8000/conference/automatic_assign_reviewers/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          user_id: $user?.id,
-          conference_id: $conference?.id,
-          max_papers_per_reviewer: maxPapersPerReviewer,
-          required_reviewers_per_paper : reviewersPerPaper
-        })
-      });
-
-      if (!response.ok) {
-        if (response.status === 400) {
-          throw new Error("Richiesta non valida.");
-        }
-        throw new Error("Errore nella richiesta.");
+    if (!response.ok) {
+      const errorData = await response.json();
+      if (errorData.error) {
+        errorMessage = errorData.error; // Salvo il messaggio di errore
+      } else {
+        errorMessage = "An unexpected error occurred.";
       }
-
-      const data = await response.json();
-      automatic_assign = true;
-    } catch (error) {
-      console.error('Errore:', error);
+      throw new Error(errorMessage);
     }
+
+    const data = await response.json();
+    automatic_assign = true;
+  } catch (error) {
+    console.error('Errore:', error);
   }
+}
+
 
 
     function formatDateForDisplay(date: Date|undefined): string {
@@ -363,51 +339,52 @@ async function togglePreference(paperId: number, preference: string) {
     }
   
     async function handleSubmit(event: SubmitEvent) {
-      event.preventDefault();
-      
-      if (!validateForm()) return;
-  
-      // Filter out empty or invalid emails
-      const validReviewers = formInvitations.reviewers.filter(reviewer => 
-          reviewer.email.trim() !== ''
-      );
-  
-      if (!isInfoModalOpen) {
-        try {
-          isSubmitting = true;
-          const response = await fetch('http://localhost:8000/conference/edit/', {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            credentials:'include',
-            body: JSON.stringify({
-              ...editFormData,
-              reviewers: validReviewers
-            })
-          });
-  
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Failed to update conference');
-          }
-  
-          if ($conference) {
-            $conference.title = editFormData.title;
-            $conference.deadline = new Date(editFormData.deadline);
-            $conference.description = editFormData.description;
-          }
-  
-          isEditing = false;
-          error = null;
-        } catch (err) {
-          error = err instanceof Error ? err.message : 'Failed to update conference. Please try again.';
-          console.error('Error updating conference:', err);
-        } finally {
-          isSubmitting = false;
+    event.preventDefault();
+    
+    if (!validateForm()) return;
+
+    // Filter out empty or invalid emails
+    const validReviewers = formInvitations.reviewers.filter(reviewer => 
+        reviewer.email.trim() !== ''
+    );
+
+    if (!isInfoModalOpen) {
+      try {
+        isSubmitting = true;
+        const response = await fetch('http://localhost:8000/conference/edit/', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials:'include',
+          body: JSON.stringify({
+            ...editFormData,
+            reviewers: validReviewers
+          })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to update conference');
         }
+
+        if ($conference) {
+          $conference.title = editFormData.title;
+          $conference.deadline = new Date(editFormData.deadline);
+          $conference.description = editFormData.description;
+          $conference.papers_deadline = new Date(editFormData.papers_deadline);
+        }
+
+        isEditing = false;
+        error = null;
+      } catch (err) {
+        error = err instanceof Error ? err.message : 'Failed to update conference. Please try again.';
+        console.error('Error updating conference:', err);
+      } finally {
+        isSubmitting = false;
       }
     }
+  }
   
     function validateForm(): boolean {
       if (!editFormData.title.trim()) {
@@ -579,6 +556,19 @@ async function togglePreference(paperId: number, preference: string) {
                   bind:value={ editFormData.deadline } 
                   class="input input-bordered w-full"
                   data-testid="deadline-input"
+                />
+              </div>
+
+              <div class="form-control">
+                <label for="papers-deadline" class="label">
+                  <span class="label-text text-lg font-semibold">Papers Deadline</span>
+                </label>
+                <input 
+                  id="papers-deadline" 
+                  type="date" 
+                  bind:value={ editFormData.papers_deadline } 
+                  class="input input-bordered w-full"
+                  data-testid="papers-deadline-input"
                 />
               </div>
               
@@ -827,6 +817,10 @@ async function togglePreference(paperId: number, preference: string) {
                           min="1"
                         />
                       </div>
+                      <!-- Messaggio di errore -->
+                      {#if errorMessage}
+                        <div class="text-error mt-2">{errorMessage}</div>
+                      {/if}
                     </div>
                     <div class="modal-action">
                       <button
@@ -850,6 +844,7 @@ async function togglePreference(paperId: number, preference: string) {
                   </div>
                 </div>
               </div>
+              
 
 
 
