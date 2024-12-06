@@ -211,7 +211,6 @@
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials:"include",
         body: JSON.stringify({
           user_id: $user?.id,
           conference_id: $conference?.id,
@@ -889,8 +888,6 @@
                   <button
                     class="btn btn-primary"
                     onclick={() => {
-                      const modal = document.getElementById('assignmentModal');
-                      if (modal) (modal as HTMLInputElement).checked = false;
                       auto_assign();
                     }}
                   >

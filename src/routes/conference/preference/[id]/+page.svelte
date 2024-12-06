@@ -270,7 +270,51 @@ async function togglePreference(paperId: number, preference: string) {
       })();
     }
   
+
+    export let automatic_assign = false;
+  let reviewersPerPaper = 1;
+  let maxPapersPerReviewer = 1;
   
+    async function auto_assign() {
+    try {
+
+
+      console.log(JSON.stringify({
+        user_id: $user?.id,
+        conference_id: $conference?.id,
+        max_papers_per_reviewer: maxPapersPerReviewer,
+        required_reviewers_per_paper : reviewersPerPaper
+      }));
+
+
+      const response = await fetch(`http://localhost:8000/conference/automatic_assign_reviewers/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: $user?.id,
+          conference_id: $conference?.id,
+          max_papers_per_reviewer: maxPapersPerReviewer,
+          required_reviewers_per_paper : reviewersPerPaper
+        })
+      });
+
+      if (!response.ok) {
+        if (response.status === 400) {
+          throw new Error("Richiesta non valida.");
+        }
+        throw new Error("Errore nella richiesta.");
+      }
+
+      const data = await response.json();
+      automatic_assign = true;
+    } catch (error) {
+      console.error('Errore:', error);
+    }
+  }
+
+
     function formatDateForDisplay(date: Date|undefined): string {
       if (date == undefined) return'';
       date = new Date(date);
@@ -739,6 +783,76 @@ async function togglePreference(paperId: number, preference: string) {
             </div>
   
             <div class="space-y-6">
+              
+
+
+              <div class="my-4">
+                {#if !automatic_assign}
+                  <button
+                    class="btn btn-primary"
+                    onclick={() => {
+                      const modal = document.getElementById('assignmentModal');
+                      if (modal) (modal as HTMLInputElement).checked = true;
+                    }}
+                  >
+                    Automatically Assign Papers
+                  </button>
+                {/if}
+              
+                <!-- Modale DaisyUI -->
+                <input type="checkbox" id="assignmentModal" class="modal-toggle" />
+                <div class="modal">
+                  <div class="modal-box">
+                    <h3 class="font-bold text-lg">Automatic Assignment Settings</h3>
+                    <div class="mt-4 space-y-4">
+                      <div>
+                        <label class="label">
+                          <span class="label-text">Number of Reviewers per Paper</span>
+                        </label>
+                        <input
+                          type="number"
+                          class="input input-bordered w-full"
+                          bind:value={reviewersPerPaper}
+                          min="1"
+                        />
+                      </div>
+                      <div>
+                        <label class="label">
+                          <span class="label-text">Max Papers per Reviewer</span>
+                        </label>
+                        <input
+                          type="number"
+                          class="input input-bordered w-full"
+                          bind:value={maxPapersPerReviewer}
+                          min="1"
+                        />
+                      </div>
+                    </div>
+                    <div class="modal-action">
+                      <button
+                        class="btn btn-secondary"
+                        onclick={() => {
+                          const modal = document.getElementById('assignmentModal');
+                          if (modal) (modal as HTMLInputElement).checked = false;
+                        }}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        class="btn btn-primary"
+                        onclick={() => {
+                          auto_assign();
+                        }}
+                      >
+                        Confirm
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+
+
               <div>
                 <h3 class="text-xl font-semibold mb-3">Description</h3>
                 <p class="text-lg whitespace-pre-line">{$conference?.description}</p>
