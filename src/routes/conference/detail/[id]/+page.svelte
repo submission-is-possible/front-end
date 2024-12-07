@@ -6,7 +6,7 @@
   import { conference } from '$stores/conferenceStore'
   import {Role} from '$lib/models/role';
   import { Paper, goToPaperDetail } from '$lib/models/paper';
-    import { paper } from '$stores/paperStore';
+  import BlindingSelector from'$lib/components/BlindingSelector.svelte';
   export let data: PageData;
 
   //let conference: Conference | null = null;
@@ -24,6 +24,7 @@
     deadline: string;
     description: string;
     papers_deadline: string;
+    status: string;
   }
 
   // Funzione per formattare la data nel formato yyyy-MM-dd
@@ -40,7 +41,8 @@
     title: '',
     deadline: formatDate(new Date()),
     description: '',
-    papers_deadline: formatDate(new Date())
+    papers_deadline: formatDate(new Date()),
+    status: 'none'
   };
 
 
@@ -55,7 +57,8 @@
           title: $conference.title.toString(),
           deadline: formatDate(new Date($conference.deadline)),
           description: $conference.description.toString(),
-          papers_deadline: formatDate(new Date($conference.papers_deadline))
+          papers_deadline: formatDate(new Date($conference.papers_deadline)),
+          status: $conference.status.toString(),
           //user_id: $user.id // Assicurati che user_id sia presente
         };
       }
@@ -408,6 +411,7 @@ async function auto_assign() {
           $conference.deadline = new Date(editFormData.deadline);
           $conference.description = editFormData.description;
           $conference.papers_deadline = new Date(editFormData.papers_deadline);
+          $conference.status = editFormData.status;
         }
 
         isEditing = false;
@@ -616,6 +620,13 @@ async function auto_assign() {
                 class="input input-bordered w-full"
                 data-testid="papers-deadline-input"
               />
+            </div>
+
+            <div class="form-control">
+              <label for="blinding" class="label">
+                <span class="label-text text-lg font-semibold">Blinding</span>
+              </label>
+              <BlindingSelector onSelection={ (key) => editFormData.status = key }/>
             </div>
             
             <div class="grid grid-cols-2 gap-4">
@@ -855,7 +866,8 @@ async function auto_assign() {
             {#if successMessage}
               <div class="alert alert-success my-2">{successMessage}</div>
             {/if}
-          
+            
+            <div class = "grid grid-cols-1 md:grid-cols-2 gap-6" >
             <!-- modale assegnamento automatico -->
             {#if !automatic_assign}
               <button
@@ -868,6 +880,11 @@ async function auto_assign() {
                 Automatically Assign Papers
               </button>
             {/if}
+            <div class="text-right">
+              <span class="label-text text-lg font-semibold">Blinding</span>
+              <BlindingSelector onSelection={ (key) => editFormData.status = key } editable = {false}/>
+            </div>
+            </div>
           
             <!-- Modale DaisyUI -->
             <input type="checkbox" id="assignmentModal" class="modal-toggle" />
@@ -876,9 +893,7 @@ async function auto_assign() {
                 <h3 class="font-bold text-lg">Automatic Assignment Settings</h3>
                 <div class="mt-4 space-y-4">
                   <div>
-                    <label class="label">
                       <span class="label-text">Number of Reviewers per Paper</span>
-                    </label>
                     <input
                       type="number"
                       class="input input-bordered w-full"
@@ -887,9 +902,7 @@ async function auto_assign() {
                     />
                   </div>
                   <div>
-                    <label class="label">
                       <span class="label-text">Max Papers per Reviewer</span>
-                    </label>
                     <input
                       type="number"
                       class="input input-bordered w-full"
