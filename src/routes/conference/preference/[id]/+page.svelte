@@ -59,8 +59,8 @@
             title: $conference.title.toString(),
             deadline: formatDate(new Date($conference.deadline)),
             description: $conference.description.toString(),
-            papers_deadline: formatDate(new Date($conference.papers_deadline))
-            status: $conference.status
+            papers_deadline: formatDate(new Date($conference.papers_deadline)),
+            status: $conference.status.toString()
           };
         }
         if($conference && $conference.roles.includes(Role.Reviewer)){

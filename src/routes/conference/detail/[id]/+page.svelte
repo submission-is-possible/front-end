@@ -869,17 +869,19 @@ async function auto_assign() {
             
             <div class = "grid grid-cols-1 md:grid-cols-2 gap-6" >
             <!-- modale assegnamento automatico -->
-            {#if !automatic_assign}
-              <button
-                class="btn btn-primary"
-                onclick={() => {
-                  const modal = document.getElementById('assignmentModal');
-                  if (modal) (modal as HTMLInputElement).checked = true;
-                }}
-              >
-                Automatically Assign Papers
-              </button>
-            {/if}
+             <div>
+              {#if !automatic_assign}
+                <button
+                  class="btn btn-primary"
+                  onclick={() => {
+                    const modal = document.getElementById('assignmentModal');
+                    if (modal) (modal as HTMLInputElement).checked = true;
+                  }}
+                >
+                  Automatically Assign Papers
+                </button>
+              {/if}
+            </div>
             <div class="text-right">
               <span class="label-text text-lg font-semibold">Blinding</span>
               <BlindingSelector onSelection={ (key) => editFormData.status = key } editable = {false}/>
