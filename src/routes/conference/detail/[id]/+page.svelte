@@ -1033,7 +1033,7 @@ async function auto_assign() {
                     <tbody>
                       {#each AuthorPapers as paper}
                         <tr class="hover" onclick={() => goToPaperDetail(paper)} style="cursor: pointer;">
-                        <tr class="hover">
+                        <tr class="hover" onclick={() => goToPaperDetail(paper)}>
                           <td>{paper.id}</td>
                           <td>{paper.author}</td>
                           <td>{paper.title}</td>

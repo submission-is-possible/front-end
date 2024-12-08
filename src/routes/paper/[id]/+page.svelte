@@ -36,7 +36,7 @@
                 fetchPaperReviews();
             }
             if($paper?.role.includes(Role.Author)){
-                //PRENDI DATI AUTHOR
+                fetchPaperReviews();
             }
             if($paper?.role.includes(Role.Reviewer)){
                 fetchReviewData();
@@ -396,7 +396,7 @@
       </div>
   
     <!-- Main Content -->
-    {:else if $paper?.role.includes(Role.Admin) || $paper?.role.includes(Role.Reviewer)}
+    {:else}
         <div class="p-6 bg-base-200 rounded-lg shadow-md">
             {#if currentPaper}
                 <div class="mb-6">
@@ -431,68 +431,68 @@
                 </button>
             </div>
             {:else if $paper?.role.includes(Role.Reviewer)}
-            {#if !been_reviewed}
-            <div class="divider">Reviewer Evaluation</div>
-            <div class="flex flex-col items-center space-y-4 mt-4">
-                <!-- Label -->
-                <label for="score" class="font-semibold">Score (0-5):</label>
+                {#if !been_reviewed}
+                <div class="divider">Reviewer Evaluation</div>
+                <div class="flex flex-col items-center space-y-4 mt-4">
+                    <!-- Label -->
+                    <label for="score" class="font-semibold">Score (0-5):</label>
 
-                <!-- Barra di selezione -->
-                <input
-                type="range"
-                id="score"
-                min="0"
-                max="5"
-                step="1"
-                class="range range-primary w-64"
-                bind:value={evaluation}
-                />
+                    <!-- Barra di selezione -->
+                    <input
+                    type="range"
+                    id="score"
+                    min="0"
+                    max="5"
+                    step="1"
+                    class="range range-primary w-64"
+                    bind:value={evaluation}
+                    />
 
-                <!-- Visualizzazione del punteggio selezionato -->
-                <p class="text-lg font-bold">Selected Score: {evaluation}</p>
+                    <!-- Visualizzazione del punteggio selezionato -->
+                    <p class="text-lg font-bold">Selected Score: {evaluation}</p>
 
-                <!-- Label -->
-                <label for="confidence" class="font-semibold">Score (0-5):</label>
+                    <!-- Label -->
+                    <label for="confidence" class="font-semibold">Score (0-5):</label>
 
-                <!-- Barra di selezione -->
-                <input
-                type="range"
-                id="confidence"
-                min="0"
-                max="5"
-                step="1"
-                class="range range-primary w-64"
-                bind:value={confidence}
-                />
+                    <!-- Barra di selezione -->
+                    <input
+                    type="range"
+                    id="confidence"
+                    min="0"
+                    max="5"
+                    step="1"
+                    class="range range-primary w-64"
+                    bind:value={confidence}
+                    />
 
-                <!-- Visualizzazione del punteggio selezionato -->
-                <p class="text-lg font-bold">Selected Confidence level: {confidence}</p>
+                    <!-- Visualizzazione del punteggio selezionato -->
+                    <p class="text-lg font-bold">Selected Confidence level: {confidence}</p>
 
-                <!-- Recensione scritta -->
-                <div class="form-control w-full max-w-md">
-                    <label class="label" for="reviewText">
-                        <span class="label-text font-semibold">Write your review</span>
-                    </label>
-                    <textarea
-                        id="reviewText"
-                        class="textarea textarea-bordered h-24"
-                        placeholder="Enter your review here"
-                        bind:value={reviewText}>
-                    </textarea>
+                    <!-- Recensione scritta -->
+                    <div class="form-control w-full max-w-md">
+                        <label class="label" for="reviewText">
+                            <span class="label-text font-semibold">Write your review</span>
+                        </label>
+                        <textarea
+                            id="reviewText"
+                            class="textarea textarea-bordered h-24"
+                            placeholder="Enter your review here"
+                            bind:value={reviewText}>
+                        </textarea>
+                    </div>
+
+                    <!-- Pulsante di conferma -->
+                    <button
+                    class="btn btn-outline btn-primary"
+                    on:click={() => { evaluation = evaluation; confidence = confidence; showModal = true; }}>
+                    Submit Score
+                    </button>
                 </div>
-
-                <!-- Pulsante di conferma -->
-                <button
-                class="btn btn-outline btn-primary"
-                on:click={() => { evaluation = evaluation; confidence = confidence; showModal = true; }}>
-                Submit Score
-                </button>
-            </div>
-            {:else}
-            <div class="alert alert-warning">
-                <span>You have already reviewed this paper</span>
-            </div>
-            {/if}
+                {:else}
+                <div class="alert alert-warning">
+                    <span>You have already reviewed this paper</span>
+                </div>
+                {/if}
             {/if}
             
 
@@ -568,46 +568,43 @@
                 </div>
         
             <div class="divider">reviews</div>
-        
-            <div class="reviews-container space-y-6">
-                {#each paperReviews as review, index}
-                    <!-- Card della recensione -->
-                    <div class="card bg-base-100 shadow-md border border-base-300">
-                        <div class="card-body">
-                            <!-- Riga superiore: Nome, Cognome, Valutazione -->
-                            <div class="flex justify-between items-center">
-                                <div class="text-lg font-semibold">
-                                    {review.name} {review.surname}
-                                </div>
-                                <div class="badge badge-primary badge-outline">
-                                    Valutazione: {review.evaluation}/5
-                                </div>
-                                <div class="badge badge-primary badge-outline">
-                                    Confidence: {review.confidence}/5
-                                </div>
+        {/if}
+        <div class="reviews-container space-y-6">
+            {#each paperReviews as review, index}
+                <!-- Card della recensione -->
+                <div class="card bg-base-100 shadow-md border border-base-300">
+                    <div class="card-body">
+                        <!-- Riga superiore: Nome, Cognome, Valutazione -->
+                        <div class="flex justify-between items-center">
+                            <div class="text-lg font-semibold">
+                                {review.name} {review.surname}
                             </div>
-            
-                            <!-- Blocco commento -->
-                            <p class="mt-4 text-base text-gray-700">
-                                {review.comment}
-                            </p>
+                            <div class="badge badge-primary badge-outline">
+                                Valutazione: {review.evaluation}/5
+                            </div>
+                            <div class="badge badge-primary badge-outline">
+                                Confidence: {review.confidence}/5
+                            </div>
                         </div>
+        
+                        <!-- Blocco commento -->
+                        <p class="mt-4 text-base text-gray-700">
+                            {review.comment}
+                        </p>
                     </div>
-            
-                    <!-- Separatore tra recensioni -->
-                    {#if index < paperReviews.length - 1}
-                        <div class="divider">Fine recensione</div>
-                    {/if}
-                {/each}
-            </div>
-            {/if}
+                </div>
+        
+                <!-- Separatore tra recensioni -->
+                {#if index < paperReviews.length - 1}
+                    <div class="divider">Fine recensione</div>
+                {/if}
+            {/each}
+        </div>
+
 
             
         </div>
-    {:else if $paper?.role.includes(Role.Author)}
-        <div>
-            ciao autore! sfortunatame ancora non hai nulla da fare qui :/
-        </div>
+
     <style>
         .divider {
             margin: 20px 0;
