@@ -861,40 +861,40 @@ async function auto_assign() {
             </div>
           </div>
 
-          {#if isAdmin} <!-- mostra i papers se si entra come program chair -->
-          <div class="my-4">
-            {#if successMessage}
-              <div class="alert alert-success my-2">{successMessage}</div>
-            {/if}
-            
-            <div class = "grid grid-cols-1 md:grid-cols-2 gap-6" >
-            <!-- modale assegnamento automatico -->
-             <div>
-              {#if !automatic_assign}
-                <button
-                  class="btn btn-primary"
-                  onclick={() => {
-                    const modal = document.getElementById('assignmentModal');
-                    if (modal) (modal as HTMLInputElement).checked = true;
-                  }}
-                >
-                  Automatically Assign Papers
-                </button>
+           <!-- mostra i papers se si entra come program chair -->
+            <div class="my-4">
+              {#if successMessage && isAdmin}
+                <div class="alert alert-success my-2">{successMessage}</div>
               {/if}
-            </div>
-            <div class="text-right">
-              <span class="label-text text-lg font-semibold">Blinding</span>
-              <BlindingSelector onSelection={ (key) => editFormData.status = key } editable = {false}/>
-            </div>
-            </div>
+            
+              <div class = "grid grid-cols-1 md:grid-cols-2 gap-6" >
+              <!-- modale assegnamento automatico -->
+                <div>
+                  {#if !automatic_assign && isAdmin}
+                    <button
+                      class="btn btn-primary"
+                      onclick={() => {
+                        const modal = document.getElementById('assignmentModal');
+                        if (modal) (modal as HTMLInputElement).checked = true;
+                      }}
+                    >
+                      Automatically Assign Papers
+                    </button>
+                  {/if}
+                </div>
+                <div class="text-right">
+                  <span class="label-text text-lg font-semibold">Blinding</span>
+                  <BlindingSelector onSelection={ (key) => editFormData.status = key } editable = {false}/>
+                </div>
+              </div>
           
-            <!-- Modale DaisyUI -->
-            <input type="checkbox" id="assignmentModal" class="modal-toggle" />
-            <div class="modal">
-              <div class="modal-box">
-                <h3 class="font-bold text-lg">Automatic Assignment Settings</h3>
-                <div class="mt-4 space-y-4">
-                  <div>
+              <!-- Modale DaisyUI -->
+              <input type="checkbox" id="assignmentModal" class="modal-toggle" />
+              <div class="modal">
+                <div class="modal-box">
+                  <h3 class="font-bold text-lg">Automatic Assignment Settings</h3>
+                  <div class="mt-4 space-y-4">
+                    <div>
                       <span class="label-text">Number of Reviewers per Paper</span>
                     <input
                       type="number"
@@ -903,42 +903,44 @@ async function auto_assign() {
                       min="1"
                     />
                   </div>
-                  <div>
-                      <span class="label-text">Max Papers per Reviewer</span>
-                    <input
-                      type="number"
-                      class="input input-bordered w-full"
-                      bind:value={maxPapersPerReviewer}
-                      min="1"
-                    />
+                    <div>
+                        <span class="label-text">Max Papers per Reviewer</span>
+                      <input
+                        type="number"
+                        class="input input-bordered w-full"
+                        bind:value={maxPapersPerReviewer}
+                        min="1"
+                      />
+                    </div>
+                    <!-- Messaggio di errore -->
+                    {#if errorMessage}
+                      <div class="text-error mt-2">{errorMessage}</div>
+                    {/if}
                   </div>
-                  <!-- Messaggio di errore -->
-                  {#if errorMessage}
-                    <div class="text-error mt-2">{errorMessage}</div>
-                  {/if}
-                </div>
-                <div class="modal-action">
-                  <button
-                    class="btn btn-secondary"
-                    onclick={() => {
-                      const modal = document.getElementById('assignmentModal');
-                      if (modal) (modal as HTMLInputElement).checked = false;
-                    }}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    class="btn btn-primary"
-                    onclick={() => {
-                      auto_assign();
-                    }}
-                  >
-                    Confirm
-                  </button>
+                  <div class="modal-action">
+                    <button
+                      class="btn btn-secondary"
+                      onclick={() => {
+                        const modal = document.getElementById('assignmentModal');
+                        if (modal) (modal as HTMLInputElement).checked = false;
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      class="btn btn-primary"
+                      onclick={() => {
+                        auto_assign();
+                      }}
+                    >
+                      Confirm
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>          
+          
+          {#if isAdmin}         
             <div class="mt-8">
               <h3 class="text-xl font-semibold mb-4">Submitted Papers</h3>
               {#if AdminPapers && AdminPapers.length > 0}
