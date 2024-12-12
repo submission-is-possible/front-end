@@ -37,7 +37,15 @@
   
   <p><strong>Deadline:</strong> {formatDate(conference.deadline)}</p>
   <p><strong>Created:</strong> {formatDate(conference.created_at)}</p>
-
+  <p style="centered">
+    {#if conference.status == "single_blind"}
+      <span class="badge badge-secondary rounded-md">Single Blind</span>
+    {:else if conference.status == "double_blind"}
+      <span class="badge badge-secondary rounded-md">Double Blind</span>
+    {:else}
+      <span class="badge badge-secondary rounded-md">None</span>
+    {/if}
+  </p>
 </button>
 
 <style>
