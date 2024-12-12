@@ -7,6 +7,7 @@ export interface Conference {
     deadline: string;
     created_at: string;
     user_id: number;
+    status: String
 }
 
 
@@ -16,4 +17,5 @@ export interface ConferenceFormData {
     deadline: string;
     description: string;
     user_id: number;
+    status: string;
 }

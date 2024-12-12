@@ -21,7 +21,8 @@ const mockConference : Conference = {
   deadline: new Date,
   papers_deadline: new Date,
   roles: [Role.Admin],
-  user_id: 1
+  user_id: 1,
+  status: 'none'
 };
 
 const mockUser = {

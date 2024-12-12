@@ -26,6 +26,7 @@
       deadline: string;
       description: string;
       papers_deadline: string;
+      status: string;
     }
   
     // Funzione per formattare la data nel formato yyyy-MM-dd
@@ -42,7 +43,8 @@
       title: '',
       deadline: formatDate(new Date()),
       description: '',
-      papers_deadline: formatDate(new Date())
+      papers_deadline: formatDate(new Date()),
+      status: 'none',
     };
   
   
@@ -57,7 +59,8 @@
             title: $conference.title.toString(),
             deadline: formatDate(new Date($conference.deadline)),
             description: $conference.description.toString(),
-            papers_deadline: formatDate(new Date($conference.papers_deadline))
+            papers_deadline: formatDate(new Date($conference.papers_deadline)),
+            status: $conference.status.toString()
           };
         }
         if($conference && $conference.roles.includes(Role.Reviewer)){

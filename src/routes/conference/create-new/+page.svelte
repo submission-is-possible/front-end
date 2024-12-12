@@ -1,6 +1,7 @@
 <script lang="ts">
 import { goto } from '$app/navigation';
 import { user } from '$stores/userStore'
+import BlindingSelector from'$lib/components/BlindingSelector.svelte';
 let conferencePath: string | URL = "/conference";
 
 interface FormData {
@@ -9,6 +10,7 @@ interface FormData {
   deadline: string; // Cambiato a string per supportare il formato yyyy-MM-dd
   description: string;
   papers_deadline: string;
+  status: string;
 }
 
 interface FormInvitations {
@@ -38,7 +40,8 @@ let formData: FormData = {
   admin_id: 0,
   deadline: formatDate(new Date()), // Imposta deadline come stringa formattata
   description: '',
-  papers_deadline: formatDate(new Date()) 
+  papers_deadline: formatDate(new Date()),
+  status: 'none'
 };
 
 let formInvitations: FormInvitations = {
@@ -125,11 +128,8 @@ async function handleSubmit(event: SubmitEvent): Promise < void > {
         },
         credentials:'include',
         body: JSON.stringify({
-          title: formData.title,
-          deadline: formData.deadline,
-          description: formData.description,
           reviewers: validReviewers,
-          papers_deadline: formData.papers_deadline
+          ...formData
         })
       });
 
@@ -237,12 +237,21 @@ async function handleSubmit(event: SubmitEvent): Promise < void > {
 
     <div class="grid grid-cols-2 gap-4">
       <div>
+        <label for="Blinding" class="label">
+          <span class="label-text">Blinding</span>
+        </label>
+        <BlindingSelector onSelection={ (key) => formData.status = key }/>
+      </div>
+      
+      <div>
         <label for="location" class="label">
           <span class="label-text">Location</span>
         </label>
         <input id="location" type="text" placeholder="Enter conference location" class="input input-bordered w-full" data-testid="location-input"/>
       </div>
     </div>
+
+
 
     <div class="grid grid-cols-2 gap-4">
       <!-- CSV Upload for Reviewers -->

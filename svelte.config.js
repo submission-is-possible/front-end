@@ -16,7 +16,8 @@ const config = {
 		adapter: adapter(),
 		alias: {
 			$stores: path.resolve('./src/stores'),
-			$types: path.resolve('src/types/')
+			$types: path.resolve('src/types/'),
+			$lib: path.resolve('/src/lib')
 		}
 	}
 };

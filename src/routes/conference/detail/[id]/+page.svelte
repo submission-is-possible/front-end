@@ -6,7 +6,7 @@
   import { conference } from '$stores/conferenceStore'
   import {Role} from '$lib/models/role';
   import { Paper, goToPaperDetail } from '$lib/models/paper';
-    import { paper } from '$stores/paperStore';
+  import BlindingSelector from'$lib/components/BlindingSelector.svelte';
   export let data: PageData;
 
   //let conference: Conference | null = null;
@@ -24,6 +24,7 @@
     deadline: string;
     description: string;
     papers_deadline: string;
+    status: string;
   }
 
   // Funzione per formattare la data nel formato yyyy-MM-dd
@@ -40,7 +41,8 @@
     title: '',
     deadline: formatDate(new Date()),
     description: '',
-    papers_deadline: formatDate(new Date())
+    papers_deadline: formatDate(new Date()),
+    status: 'none'
   };
 
 
@@ -55,7 +57,8 @@
           title: $conference.title.toString(),
           deadline: formatDate(new Date($conference.deadline)),
           description: $conference.description.toString(),
-          papers_deadline: formatDate(new Date($conference.papers_deadline))
+          papers_deadline: formatDate(new Date($conference.papers_deadline)),
+          status: $conference.status.toString(),
           //user_id: $user.id // Assicurati che user_id sia presente
         };
       }
@@ -408,6 +411,7 @@ async function auto_assign() {
           $conference.deadline = new Date(editFormData.deadline);
           $conference.description = editFormData.description;
           $conference.papers_deadline = new Date(editFormData.papers_deadline);
+          $conference.status = editFormData.status;
         }
 
         isEditing = false;
@@ -616,6 +620,13 @@ async function auto_assign() {
                 class="input input-bordered w-full"
                 data-testid="papers-deadline-input"
               />
+            </div>
+
+            <div class="form-control">
+              <label for="blinding" class="label">
+                <span class="label-text text-lg font-semibold">Blinding</span>
+              </label>
+              <BlindingSelector onSelection={ (key) => editFormData.status = key }/>
             </div>
             
             <div class="grid grid-cols-2 gap-4">
@@ -850,35 +861,41 @@ async function auto_assign() {
             </div>
           </div>
 
-          {#if isAdmin} <!-- mostra i papers se si entra come program chair -->
-          <div class="my-4">
-            {#if successMessage}
-              <div class="alert alert-success my-2">{successMessage}</div>
-            {/if}
+           <!-- mostra i papers se si entra come program chair -->
+            <div class="my-4">
+              {#if successMessage && isAdmin}
+                <div class="alert alert-success my-2">{successMessage}</div>
+              {/if}
+            
+              <div class = "grid grid-cols-1 md:grid-cols-2 gap-6" >
+              <!-- modale assegnamento automatico -->
+                <div>
+                  {#if !automatic_assign && isAdmin}
+                    <button
+                      class="btn btn-primary"
+                      onclick={() => {
+                        const modal = document.getElementById('assignmentModal');
+                        if (modal) (modal as HTMLInputElement).checked = true;
+                      }}
+                    >
+                      Automatically Assign Papers
+                    </button>
+                  {/if}
+                </div>
+                <div class="text-right">
+                  <span class="label-text text-lg font-semibold">Blinding</span>
+                  <BlindingSelector onSelection={ (key) => editFormData.status = key } editable = {false}/>
+                </div>
+              </div>
           
-            <!-- modale assegnamento automatico -->
-            {#if !automatic_assign}
-              <button
-                class="btn btn-primary"
-                onclick={() => {
-                  const modal = document.getElementById('assignmentModal');
-                  if (modal) (modal as HTMLInputElement).checked = true;
-                }}
-              >
-                Automatically Assign Papers
-              </button>
-            {/if}
-          
-            <!-- Modale DaisyUI -->
-            <input type="checkbox" id="assignmentModal" class="modal-toggle" />
-            <div class="modal">
-              <div class="modal-box">
-                <h3 class="font-bold text-lg">Automatic Assignment Settings</h3>
-                <div class="mt-4 space-y-4">
-                  <div>
-                    <label class="label">
+              <!-- Modale DaisyUI -->
+              <input type="checkbox" id="assignmentModal" class="modal-toggle" />
+              <div class="modal">
+                <div class="modal-box">
+                  <h3 class="font-bold text-lg">Automatic Assignment Settings</h3>
+                  <div class="mt-4 space-y-4">
+                    <div>
                       <span class="label-text">Number of Reviewers per Paper</span>
-                    </label>
                     <input
                       type="number"
                       class="input input-bordered w-full"
@@ -886,44 +903,44 @@ async function auto_assign() {
                       min="1"
                     />
                   </div>
-                  <div>
-                    <label class="label">
-                      <span class="label-text">Max Papers per Reviewer</span>
-                    </label>
-                    <input
-                      type="number"
-                      class="input input-bordered w-full"
-                      bind:value={maxPapersPerReviewer}
-                      min="1"
-                    />
+                    <div>
+                        <span class="label-text">Max Papers per Reviewer</span>
+                      <input
+                        type="number"
+                        class="input input-bordered w-full"
+                        bind:value={maxPapersPerReviewer}
+                        min="1"
+                      />
+                    </div>
+                    <!-- Messaggio di errore -->
+                    {#if errorMessage}
+                      <div class="text-error mt-2">{errorMessage}</div>
+                    {/if}
                   </div>
-                  <!-- Messaggio di errore -->
-                  {#if errorMessage}
-                    <div class="text-error mt-2">{errorMessage}</div>
-                  {/if}
-                </div>
-                <div class="modal-action">
-                  <button
-                    class="btn btn-secondary"
-                    onclick={() => {
-                      const modal = document.getElementById('assignmentModal');
-                      if (modal) (modal as HTMLInputElement).checked = false;
-                    }}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    class="btn btn-primary"
-                    onclick={() => {
-                      auto_assign();
-                    }}
-                  >
-                    Confirm
-                  </button>
+                  <div class="modal-action">
+                    <button
+                      class="btn btn-secondary"
+                      onclick={() => {
+                        const modal = document.getElementById('assignmentModal');
+                        if (modal) (modal as HTMLInputElement).checked = false;
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      class="btn btn-primary"
+                      onclick={() => {
+                        auto_assign();
+                      }}
+                    >
+                      Confirm
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>          
+          
+          {#if isAdmin}         
             <div class="mt-8">
               <h3 class="text-xl font-semibold mb-4">Submitted Papers</h3>
               {#if AdminPapers && AdminPapers.length > 0}
@@ -1018,7 +1035,7 @@ async function auto_assign() {
                     <tbody>
                       {#each AuthorPapers as paper}
                         <tr class="hover" onclick={() => goToPaperDetail(paper)} style="cursor: pointer;">
-                        <tr class="hover">
+                        <tr class="hover" onclick={() => goToPaperDetail(paper)}>
                           <td>{paper.id}</td>
                           <td>{paper.author}</td>
                           <td>{paper.title}</td>
