@@ -7,7 +7,7 @@
 
   let navItems = [
       { label: 'Conference', link: '/conference', visible: true },
-      { label: 'Reviews', link: '/reviews', visible: true },
+      { label: 'Notifications', link: '/notifications', visible: true },
       { label: 'Submissions', link: '/submissions', visible: false}
     ];
 
@@ -37,10 +37,10 @@
       <h6 class="footer-title">Pages</h6>
       <ul class="menu menu-nav">
         <li>
-          <a href="/about-us">About us</a>
+          <a href="/nika">About us</a>
         </li>
         <li>
-          <a href="/contacts">Contacts</a>
+          <a href="/nika">Contacts</a>
         </li>
       </ul>
     </nav>
