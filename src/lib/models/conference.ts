@@ -1,6 +1,7 @@
 import { goto } from '$app/navigation';
 import { setConference } from '$stores/conferenceStore';
 import { Role } from '$lib/models/role'
+import type { ReviewTemplateItem } from '$lib/models/ReviewItem'
 
 export class Conference {
     id: Number;
@@ -11,7 +12,8 @@ export class Conference {
     deadline: Date;
     papers_deadline: Date;
     roles: Role[];
-    status: String
+    status: String;
+    reviewTemplate: ReviewTemplateItem[];
 
     constructor(id: Number, creator_id: Number, title : String, created_at : Date, deadline: Date, papers_deadline: Date,status: String,  description : String, roles:Role[]){
         this.id = id;
@@ -23,6 +25,7 @@ export class Conference {
         this.description = description;
         this.roles = roles;
         this.status = status;
+        this.reviewTemplate = [];
     }
 }
 

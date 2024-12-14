@@ -28,6 +28,7 @@
     description: string;
     papers_deadline: string;
     status: string;
+    reviewTemplate: ReviewTemplateItem[];
   }
 
   // Funzione per formattare la data nel formato yyyy-MM-dd
@@ -45,7 +46,8 @@
     deadline: formatDate(new Date()),
     description: '',
     papers_deadline: formatDate(new Date()),
-    status: 'none'
+    status: 'none',
+    reviewTemplate: []
   };
 
 
@@ -62,7 +64,7 @@
           description: $conference.description.toString(),
           papers_deadline: formatDate(new Date($conference.papers_deadline)),
           status: $conference.status.toString(),
-          //user_id: $user.id // Assicurati che user_id sia presente
+          reviewTemplate: $conference.reviewTemplate
         };
       }
       if($conference?.roles.includes(Role.Author)){
@@ -402,7 +404,6 @@ async function auto_assign() {
           body: JSON.stringify({
             ...editFormData,
             reviewers: validReviewers,
-            ReviewTemplate: ReviewTemplate,
           })
         });
 
@@ -537,10 +538,8 @@ async function auto_assign() {
     isReviewCustomizationModalOpen = !isReviewCustomizationModalOpen;
   }
 
-  let ReviewTemplate: ReviewTemplateItem[]=[];
-
   function setReviewTemplate(template:ReviewTemplateItem[]) {
-    ReviewTemplate = template;
+    editFormData.reviewTemplate = template;
   }
 
 </script>
@@ -788,7 +787,9 @@ async function auto_assign() {
             {/if}
 
             {#if isReviewCustomizationModalOpen}
-              <ReviewCustomization toggleModal = {toggleReviewCustomizationModal} onSave = {setReviewTemplate}/>
+              <ReviewCustomization toggleModal = {toggleReviewCustomizationModal} 
+                                    onSave = {setReviewTemplate} 
+                                    reviewTemplate={editFormData.reviewTemplate}/>
             {/if}
             
             <div class="flex gap-4 justify-end mt-8">

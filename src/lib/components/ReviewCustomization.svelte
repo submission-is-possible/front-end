@@ -3,7 +3,7 @@
   import type { ReviewTemplateItem } from "$lib/models/ReviewItem";
   export let onSave:(template:ReviewTemplateItem[]) => void;
   export let toggleModal: ()=>void ;
-  let reviewTemplate : ReviewTemplateItem[] = [];
+  export let reviewTemplate : ReviewTemplateItem[] = [];
 
   function addReviewTemplateItem(){
     reviewTemplate=[...reviewTemplate , {label:'', description:'', has_comment: true, has_score: true}];

@@ -138,7 +138,7 @@ async function handleSubmit(event: SubmitEvent): Promise < void > {
         credentials:'include',
         body: JSON.stringify({
           reviewers: validReviewers,
-          ReviewTemplate: ReviewTemplate,
+          reviewTemplate: ReviewTemplate,
           ...formData
         })
       });
