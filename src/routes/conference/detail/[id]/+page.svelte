@@ -6,7 +6,10 @@
   import { conference } from '$stores/conferenceStore'
   import {Role} from '$lib/models/role';
   import { Paper, goToPaperDetail } from '$lib/models/paper';
-  import BlindingSelector from'$lib/components/BlindingSelector.svelte';
+  import BlindingSelector from '$lib/components/BlindingSelector.svelte';
+  import ReviewCustomization from '$lib/components/ReviewCustomization.svelte';
+	import ReviewItemList from '$lib/components/ReviewItemList.svelte';  
+  import { ReviewTemplateItem } from '$lib/models/ReviewItem';
   export let data: PageData;
 
   //let conference: Conference | null = null;
@@ -101,6 +104,7 @@
 
   //serve per gestire lo stato del modal (info del csv)
   let isInfoModalOpen = false;
+  let isReviewCustomizationModalOpen = false;
 
   export let automatic_Assignment = false;
   let reviewersPerPaper = 1;
@@ -397,7 +401,8 @@ async function auto_assign() {
           credentials:'include',
           body: JSON.stringify({
             ...editFormData,
-            reviewers: validReviewers
+            reviewers: validReviewers,
+            ReviewTemplate: ReviewTemplate,
           })
         });
 
@@ -528,7 +533,15 @@ async function auto_assign() {
     isInfoModalOpen = !isInfoModalOpen;
   }
 
+  function toggleReviewCustomizationModal() {
+    isReviewCustomizationModalOpen = !isReviewCustomizationModalOpen;
+  }
 
+  let ReviewTemplate: ReviewTemplateItem[]=[];
+
+  function setReviewTemplate(template:ReviewTemplateItem[]) {
+    ReviewTemplate = template;
+  }
 
 </script>
 
@@ -626,7 +639,7 @@ async function auto_assign() {
               <label for="blinding" class="label">
                 <span class="label-text text-lg font-semibold">Blinding</span>
               </label>
-              <BlindingSelector onSelection={ (key) => editFormData.status = key }/>
+              <BlindingSelector onSelection={ (key:string) => editFormData.status = key }/>
             </div>
             
             <div class="grid grid-cols-2 gap-4">
@@ -687,6 +700,19 @@ async function auto_assign() {
                     Add Reviewer
                   </button>
                 </div>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+              </div>
+              <div>
+                <button
+                  class="btn w-full"
+                  type="button"
+                  onclick={toggleReviewCustomizationModal}
+                  >
+                  Customize Review
+                </button>
               </div>
             </div>
 
@@ -761,6 +787,10 @@ async function auto_assign() {
             </div>
             {/if}
 
+            {#if isReviewCustomizationModalOpen}
+              <ReviewCustomization toggleModal = {toggleReviewCustomizationModal} onSave = {setReviewTemplate}/>
+            {/if}
+            
             <div class="flex gap-4 justify-end mt-8">
               <button 
                 type="button" 
@@ -886,7 +916,7 @@ async function auto_assign() {
                 </div>
                 <div class="text-right">
                   <span class="label-text text-lg font-semibold">Blinding</span>
-                  <BlindingSelector onSelection={ (key) => editFormData.status = key } editable = {false}/>
+                  <BlindingSelector onSelection={ (key:string) => editFormData.status = key } editable = {false}/>
                 </div>
               </div>
           

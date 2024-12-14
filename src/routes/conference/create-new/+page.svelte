@@ -1,7 +1,10 @@
 <script lang="ts">
+import ReviewCustomization from '$lib/components/ReviewCustomization.svelte';
+import ReviewItemList from '$lib/components/ReviewItemList.svelte';
 import { goto } from '$app/navigation';
 import { user } from '$stores/userStore'
-import BlindingSelector from'$lib/components/BlindingSelector.svelte';
+import BlindingSelector from '$lib/components/BlindingSelector.svelte';
+    import { ReviewTemplateItem } from '$lib/models/ReviewItem';
 let conferencePath: string | URL = "/conference";
 
 interface FormData {
@@ -79,6 +82,12 @@ function gotoConference() {
     goto(conferencePath);
 }
 
+let ReviewTemplate: ReviewTemplateItem[]=[];
+
+function setReviewTemplate(template:ReviewTemplateItem[]) {
+  ReviewTemplate = template;
+}
+
 async function handleCsvUpload(event: Event) {
   const input = event.target as HTMLInputElement;
   if (input.files && input.files[0]) {
@@ -129,6 +138,7 @@ async function handleSubmit(event: SubmitEvent): Promise < void > {
         credentials:'include',
         body: JSON.stringify({
           reviewers: validReviewers,
+          ReviewTemplate: ReviewTemplate,
           ...formData
         })
       });
@@ -164,11 +174,17 @@ async function handleSubmit(event: SubmitEvent): Promise < void > {
 
   //serve per gestire lo stato del modal (info del csv)
   let isInfoModalOpen = false;
+  let isReviewCustomizationModalOpen = false;
 
   //per toggleare il modal
   function toggleInfoModal() {
     isInfoModalOpen = !isInfoModalOpen;
   }
+
+  function toggleReviewCustomizationModal() {
+    isReviewCustomizationModalOpen = !isReviewCustomizationModalOpen;
+  }
+
 </script>
 
 <div class="p-8">
@@ -260,6 +276,7 @@ async function handleSubmit(event: SubmitEvent): Promise < void > {
           <h3 class="font-semibold">Upload Reviewers CSV</h3>
           <button 
             class="btn btn-ghost btn-xs btn-circle"
+            type="button"
             onclick={toggleInfoModal}
             aria-label="CSV format info">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -311,6 +328,19 @@ async function handleSubmit(event: SubmitEvent): Promise < void > {
             Add Reviewer
           </button>
         </div>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+      </div>
+      <div>
+        <button
+          class="btn w-full"
+          type="button"
+          onclick={toggleReviewCustomizationModal}
+          >
+          Customize Review
+        </button>
       </div>
     </div>
 
@@ -382,6 +412,10 @@ async function handleSubmit(event: SubmitEvent): Promise < void > {
         </div>
       </div>
     </div>
+    {/if}
+
+    {#if isReviewCustomizationModalOpen}
+      <ReviewCustomization toggleModal = {toggleReviewCustomizationModal} onSave = {setReviewTemplate}/>
     {/if}
 
     <!-- Submit Error Message -->
