@@ -9,8 +9,8 @@
     export let data: PageData;
     import BlindingSelector from '$lib/components/BlindingSelector.svelte';
     import ReviewCustomization from '$lib/components/ReviewCustomization.svelte';
-    import ReviewItemList from '$lib/components/ReviewItemList.svelte';
-    import { ReviewTemplateItem } from '$lib/models/ReviewItem';
+    import ReviewItemList from '$lib/components/ReviewItem.svelte';
+    import { ReviewTemplateItem } from '$lib/models/reviewItem';
     import { writable } from 'svelte/store';
   
     //let conference: Conference | null = null;

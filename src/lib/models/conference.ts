@@ -1,7 +1,7 @@
 import { goto } from '$app/navigation';
 import { setConference } from '$stores/conferenceStore';
 import { Role } from '$lib/models/role'
-import type { ReviewTemplateItem } from '$lib/models/ReviewItem'
+import type { ReviewTemplateItem } from '$lib/models/reviewItem'
 
 export class Conference {
     id: Number;

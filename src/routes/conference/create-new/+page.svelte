@@ -1,10 +1,10 @@
 <script lang="ts">
 import ReviewCustomization from '$lib/components/ReviewCustomization.svelte';
-import ReviewItemList from '$lib/components/ReviewItemList.svelte';
+import ReviewItemList from '$lib/components/ReviewItem.svelte';
 import { goto } from '$app/navigation';
 import { user } from '$stores/userStore'
 import BlindingSelector from '$lib/components/BlindingSelector.svelte';
-    import { ReviewTemplateItem } from '$lib/models/ReviewItem';
+    import { ReviewTemplateItem } from '$lib/models/reviewItem';
 let conferencePath: string | URL = "/conference";
 
 interface FormData {
