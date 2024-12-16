@@ -14,6 +14,7 @@
   import { writable } from 'svelte/store';
   import ReviewItem from '$lib/components/ReviewItem.svelte';
   import { ReviewTemplateItem } from '$lib/models/reviewItem';
+    import CommentSection from '$lib/components/CommentSection.svelte';
 
 
     let isLoading = true;
@@ -44,6 +45,7 @@
             if($paper?.role.includes(Role.Reviewer)){
                 fetchReviewData();
                 hasBeenReviewed();
+                fetchReview();
             }
         } catch (err) {
             error = 'Error loading conference details';
@@ -326,8 +328,16 @@
    
 
 
-    let paperReviews: { name: string ; surname: string; evaluation: number; confidence: number; comment: string; reviewItems: ReviewTemplateItem[]}[] = []; // Lista dei revisori
-
+    let paperReviews: {
+        id: number; 
+        name: string; 
+        surname: string; 
+        evaluation: number;
+        confidence: number;
+        comment: string;
+        comments: Comment[];
+        reviewItems: ReviewTemplateItem[]}[] = []; // Lista dei revisori
+        
     export async function fetchPaperReviews() {
         try {
             const response = await fetch(`http://localhost:8000/reviews/get_paper_reviews/?paper_id=${$paper?.id}&page=${1}&page_size=${50}`, {
@@ -352,12 +362,54 @@
             console.log("recensioni");
 
             paperReviews = data.reviews.map((review: any) => ({
+                id:review.id,
                 name: review.user.first_name,
                 surname: review.user.last_name,
                 evaluation: review.score,
                 confidence: review.confidence_level,
                 comment: review.comment_text,
-                reviewItems: review.reviewItems
+                reviewItems: review.reviewItems,
+                comments: review.comments
+            }));
+
+            console.log("Recensioni caricate con successo:", data);
+        } catch (error) {
+            console.error("Errore durante il caricamento delle recensioni:", error);
+        }
+    }
+
+    async function fetchReview(){
+        try {
+            const response = await fetch(`http://localhost:8000/reviews/${$paper?.id}/get_review/?page=${1}&page_size=${50}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include', // Include i cookie per autenticazione, se necessario
+            });
+
+            if (!response.ok) {
+                if (response.status === 400) {
+                    throw new Error("Richiesta non valida. Assicurati di aver specificato un ID paper corretto.");
+                }
+                if (response.status === 405) {
+                    throw new Error("Metodo non permesso. Verifica che la richiesta sia GET.");
+                }
+                throw new Error("Errore durante la richiesta.");
+            }
+
+            const data = await response.json();
+            console.log("recensioni");
+
+            paperReviews = data.reviews.map((review: any) => ({
+                id:review.id,
+                name: review.user.first_name,
+                surname: review.user.last_name,
+                evaluation: review.score,
+                confidence: review.confidence_level,
+                comment: review.comment_text,
+                reviewItems: review.reviewItems,
+                comments: review.comments
             }));
 
             console.log("Recensioni caricate con successo:", data);
@@ -433,76 +485,76 @@
             </div>
             {:else if $paper?.role.includes(Role.Reviewer)}
                 {#if !been_reviewed}
-                
-                <div class="flex flex-col items-center space-y-4 mt-4">
-                    <div class="divider">Overall Evaluation</div>
-                    <!-- Label -->
-                    <label for="score" class="font-semibold">Overall score (0-5):</label>
+                    <div class="flex flex-col items-center space-y-4 mt-4">
+                        <div class="divider">Overall Evaluation</div>
+                        <!-- Label -->
+                        <label for="score" class="font-semibold">Overall score (0-5):</label>
 
-                    <!-- Visualizzazione del punteggio selezionato -->
-                    <p class="font-bold">Selected Score: {score}</p>
+                        <!-- Visualizzazione del punteggio selezionato -->
+                        <p class="font-bold">Selected Score: {score}</p>
 
-                    <!-- Barra di selezione -->
-                    <input
-                    type="range"
-                    id="score"
-                    min="0"
-                    max="5"
-                    step="1"
-                    class="range range-primary w-64"
-                    bind:value={score}
-                    />
+                        <!-- Barra di selezione -->
+                        <input
+                        type="range"
+                        id="score"
+                        min="0"
+                        max="5"
+                        step="1"
+                        class="range range-primary w-64"
+                        bind:value={score}
+                        />
 
-                    
+                        
 
-                    <!-- Label -->
-                    <label for="confidence" class="font-semibold">Reviewer Confidence (0-5):</label>
+                        <!-- Label -->
+                        <label for="confidence" class="font-semibold">Reviewer Confidence (0-5):</label>
 
-                    <!-- Visualizzazione del punteggio selezionato -->
-                    <p class="font-bold">Selected Confidence level: {confidence}</p>
-                    
-                    <!-- Barra di selezione -->
-                    <input
-                    type="range"
-                    id="confidence"
-                    min="0"
-                    max="5"
-                    step="1"
-                    class="range range-primary w-64"
-                    bind:value={confidence}
-                    />
+                        <!-- Visualizzazione del punteggio selezionato -->
+                        <p class="font-bold">Selected Confidence level: {confidence}</p>
+                        
+                        <!-- Barra di selezione -->
+                        <input
+                        type="range"
+                        id="confidence"
+                        min="0"
+                        max="5"
+                        step="1"
+                        class="range range-primary w-64"
+                        bind:value={confidence}
+                        />
 
 
-                    <!-- Recensione scritta -->
-                    <div class="form-control w-full max-w-md">
-                        <label class="label" for="reviewText">
-                            <span class="label-text font-semibold">Write your review</span>
-                        </label>
-                        <textarea
-                            id="reviewText"
-                            class="textarea textarea-bordered h-24"
-                            placeholder="Enter your review here"
-                            bind:value={reviewText}>
-                        </textarea>
+                        <!-- Recensione scritta -->
+                        <div class="form-control w-full max-w-md">
+                            <label class="label" for="reviewText">
+                                <span class="label-text font-semibold">Write your review</span>
+                            </label>
+                            <textarea
+                                id="reviewText"
+                                class="textarea textarea-bordered h-24"
+                                placeholder="Enter your review here"
+                                bind:value={reviewText}>
+                            </textarea>
+                        </div>
+                        {#each $conference?.reviewTemplate || [] as reviewTemplateItem} 
+                            <ReviewItem templateItem = {reviewTemplateItem} />
+                        {/each}
+                        
                     </div>
-                    {#each $conference?.reviewTemplate || [] as reviewTemplateItem} 
-                        <ReviewItem templateItem = {reviewTemplateItem} />
-                    {/each}
-                    
-                </div>
 
-                <!-- Pulsante di conferma -->
-                <div class="flex flex-col items-center space-y-4 mt-4">
-                    <button
-                    class="btn btn-outline btn-primary"
-                    on:click={() => { showModal = true; }}>
-                    Submit Score
-                    </button>
-                </div>                
+                    <!-- Pulsante di conferma -->
+                    <div class="flex flex-col items-center space-y-4 mt-4">
+                        <button
+                        class="btn btn-outline btn-primary"
+                        on:click={() => { showModal = true; }}>
+                        Submit Score
+                        </button>
+                    </div>                
 
                 {:else}
-                <div class="alert alert-warning">
+                <div class="alert alert-warning mb-8">
                     <span>You have already reviewed this paper</span>
+
                 </div>
                 {/if}
             {/if}
@@ -607,6 +659,9 @@
                         {#each review.reviewItems as reviewItem}
                             <ReviewItem templateItem={reviewItem} editable = {false}/>
                         {/each}
+                        {#if $paper?.role.includes(Role.Reviewer) || $paper?.role.includes(Role.Admin)}
+                            <CommentSection comments={review.comments} review_id={review.id}/>
+                        {/if}
                     </div>
                 </div>
         
@@ -617,9 +672,7 @@
             {/each}
         </div>
 
-
-            
-        </div>
+    </div>
 
     <style>
         .divider {
