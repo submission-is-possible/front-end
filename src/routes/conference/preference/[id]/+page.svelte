@@ -7,6 +7,10 @@
     import {Role} from '$lib/models/role';
     import { Paper, goToPaperDetail } from '$lib/models/paper';
     export let data: PageData;
+    import BlindingSelector from '$lib/components/BlindingSelector.svelte';
+    import ReviewCustomization from '$lib/components/ReviewCustomization.svelte';
+    import ReviewItemList from '$lib/components/ReviewItem.svelte';
+    import { ReviewTemplateItem } from '$lib/models/reviewItemData';
     import { writable } from 'svelte/store';
   
     //let conference: Conference | null = null;
@@ -27,6 +31,7 @@
       description: string;
       papers_deadline: string;
       status: string;
+      reviewTemplate: ReviewTemplateItem[]
     }
   
     // Funzione per formattare la data nel formato yyyy-MM-dd
@@ -45,6 +50,7 @@
       description: '',
       papers_deadline: formatDate(new Date()),
       status: 'none',
+      reviewTemplate: []
     };
   
   
@@ -60,7 +66,8 @@
             deadline: formatDate(new Date($conference.deadline)),
             description: $conference.description.toString(),
             papers_deadline: formatDate(new Date($conference.papers_deadline)),
-            status: $conference.status.toString()
+            status: $conference.status.toString(),
+            reviewTemplate: $conference.reviewTemplate
           };
         }
         if($conference && $conference.roles.includes(Role.Reviewer)){
@@ -87,6 +94,7 @@
   
     //serve per gestire lo stato del modal (info del csv)
     let isInfoModalOpen = false;
+    let isReviewCustomizationModalOpen = false;
     
     $: totalPages = Math.ceil(totalPapers / pageSize);
 
@@ -409,7 +417,13 @@ async function togglePreference(paperId: number, preference: string) {
       isInfoModalOpen = !isInfoModalOpen;
     }
 
+    function toggleReviewCustomizationModal() {
+      isReviewCustomizationModalOpen = !isReviewCustomizationModalOpen;
+    }
 
+    function setReviewTemplate(template:ReviewTemplateItem[]) {
+      editFormData.reviewTemplate = template;
+    }
 </script>
 
 
@@ -501,6 +515,13 @@ async function togglePreference(paperId: number, preference: string) {
                   data-testid="papers-deadline-input"
                 />
               </div>
+
+              <div class="form-control">
+                <label for="blinding" class="label">
+                  <span class="label-text text-lg font-semibold">Blinding</span>
+                </label>
+                <BlindingSelector onSelection={ (key:string) => editFormData.status = key }/>
+              </div>
               
               <div class="grid grid-cols-2 gap-4">
                 <!-- CSV Upload for Reviewers -->
@@ -534,30 +555,45 @@ async function togglePreference(paperId: number, preference: string) {
                 <div>
                   <h3 class="font-semibold mb-2">Reviewers</h3>
                   <div class="relative">
-                    <div class="max-h-64 overflow-y-auto border rounded-lg p-2 mb-2">
-                      {#each formInvitations.reviewers as reviewer, index}
-                        <div class="flex items-center mb-2 last:mb-0">
-                          <input type="text" 
-                            bind:value={reviewer.email} 
-                            placeholder="Reviewer email"
-                            class="input input-bordered w-full" 
-                            data-testid="reviewer-email-input"/>
-                          <button 
-                            type="button" 
-                            class="btn btn-error btn-sm ml-2" 
-                            onclick={() => removeEmail('reviewers', index)}>
-                            Remove
-                          </button>
-                        </div>
-                      {/each}
-                    </div>
+                    {#if formInvitations.reviewers.length>0}
+                      <div class="max-h-64 overflow-y-auto border rounded-lg p-2 mb-2">
+                        {#each formInvitations.reviewers as reviewer, index}
+                          <div class="flex items-center mb-2 last:mb-0">
+                            <input type="text" 
+                              bind:value={reviewer.email} 
+                              placeholder="Reviewer email"
+                              class="input input-bordered w-full" 
+                              data-testid="reviewer-email-input"/>
+                            <button 
+                              type="button" 
+                              class="btn btn-error btn-sm ml-2" 
+                              onclick={() => removeEmail('reviewers', index)}>
+                              Remove
+                            </button>
+                          </div>
+                        {/each}
+                      </div>
+                    {/if}
                     <button 
                       type="button" 
-                      class="btn btn-secondary w-full mt-2" 
+                      class="btn btn-secondary w-full" 
                       onclick={() => addEmail('reviewers')}>
                       Add Reviewer
                     </button>
                   </div>
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                </div>
+                <div>
+                  <button
+                    class="btn w-full"
+                    type="button"
+                    onclick={toggleReviewCustomizationModal}
+                    >
+                    Customize Review
+                  </button>
                 </div>
               </div>
   
@@ -630,6 +666,10 @@ async function togglePreference(paperId: number, preference: string) {
                   </div>
                 </div>
               </div>
+              {/if}
+
+              {#if isReviewCustomizationModalOpen}
+                <ReviewCustomization toggleModal = {toggleReviewCustomizationModal} onSave = {setReviewTemplate} reviewTemplate={editFormData.reviewTemplate}/>
               {/if}
   
               <div class="flex gap-4 justify-end mt-8">

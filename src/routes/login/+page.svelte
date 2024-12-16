@@ -41,7 +41,7 @@
             return;
           }
 
-          setUser({email: '', id: data.user_id, isLoggedin : true});
+          setUser({email: '', id: data.user_id, isLoggedin : true, first_name: '', last_name:''});
           goto('/');
 
       } catch (error) {

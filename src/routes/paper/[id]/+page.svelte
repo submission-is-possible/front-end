@@ -4,7 +4,7 @@
   import { goto } from '$app/navigation';
   import { paper, setPaper } from '$stores/paperStore';
   import { user } from '$stores/userStore';
-  import { conference, setConference } from '$stores/conferenceStore'
+  import { conference } from '$stores/conferenceStore'
   import {Role} from '$lib/models/role';
   import { Paper, goToPaperDetail } from '$lib/models/paper';
   import { get } from 'svelte/store';
@@ -12,6 +12,10 @@
   import { Conference } from '$lib/models/conference';
   export let data: PageData;
   import { writable } from 'svelte/store';
+  import ReviewItem from '$lib/components/ReviewItem.svelte';
+  import { ReviewTemplateItem } from '$lib/models/reviewItemData';
+    import CommentSection from '$lib/components/CommentSection.svelte';
+    import { Comment } from '$lib/models/comments';
 
 
     let isLoading = true;
@@ -28,6 +32,7 @@
     }
 
     onMount(() => {
+        console.log($conference?.reviewTemplate)
         //controlla i ruoli dell'utente e prendi le info necessarie
         try{
             currentPaper = $paper;
@@ -41,6 +46,7 @@
             if($paper?.role.includes(Role.Reviewer)){
                 fetchReviewData();
                 hasBeenReviewed();
+                fetchReview();
             }
         } catch (err) {
             error = 'Error loading conference details';
@@ -212,17 +218,15 @@
     }
 
 
-
     let evaluation: 'accepted' | 'rejected' | null = null; // Valutazione selezionata ("accepted" o "rejected")
-    let confidence: number = 0; // Valutazione selezionata ("accepted" o "rejected")
+    let score: number = 0;
+    let confidence: number = 0; 
     let showModal = false; // Controlla la visibilità del modale
     const eventDispatcher = createEventDispatcher(); // Per comunicare con il componente genitore
 
 
-
-
-    async function submitEvaluationReviewer(evaluation : string, confidence : number) {
-        
+    async function submitEvaluationReviewer(score : number, confidence : number) {
+        console.log($conference?.reviewTemplate)
         try {
             const response = await fetch('http://localhost:8000/reviews/create_review/', {
                 method: 'POST',
@@ -232,10 +236,10 @@
                 credentials: 'include', // Necessario per includere il cookie CSRF, se richiesto
                 body: JSON.stringify({
                     paper_id: $paper?.id,
-                    user_id: $user?.id,
                     comment_text: reviewText,
-                    score: evaluation,
+                    score: score,
                     confidence_level: confidence,
+                    reviewItemList: $conference?.reviewTemplate
                 }),
             });
 
@@ -325,8 +329,17 @@
    
 
 
-    let paperReviews: { name: string ; surname: string; evaluation: number; confidence: number; comment: string}[] = []; // Lista dei revisori
-
+    let paperReviews: {
+        id: number; 
+        name: string; 
+        surname: string; 
+        evaluation: number;
+        confidence: number;
+        comment: string;
+        comments: Comment[];
+        reviewItems: ReviewTemplateItem[]
+    }[] = []; // Lista dei revisori
+    
     export async function fetchPaperReviews() {
         try {
             const response = await fetch(`http://localhost:8000/reviews/get_paper_reviews/?paper_id=${$paper?.id}&page=${1}&page_size=${50}`, {
@@ -349,14 +362,56 @@
 
             const data = await response.json();
             console.log("recensioni");
-            console.log("Recensioni caricate con successo:", data);
 
             paperReviews = data.reviews.map((review: any) => ({
+                id:review.id,
                 name: review.user.first_name,
                 surname: review.user.last_name,
                 evaluation: review.score,
                 confidence: review.confidence_level,
                 comment: review.comment_text,
+                reviewItems: review.reviewItems,
+                comments: review.comments
+            }));
+
+            console.log("Recensioni caricate con successo:", data);
+        } catch (error) {
+            console.error("Errore durante il caricamento delle recensioni:", error);
+        }
+    }
+
+    async function fetchReview(){
+        try {
+            const response = await fetch(`http://localhost:8000/reviews/${$paper?.id}/get_review/?page=${1}&page_size=${50}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include', // Include i cookie per autenticazione, se necessario
+            });
+
+            if (!response.ok) {
+                if (response.status === 400) {
+                    throw new Error("Richiesta non valida. Assicurati di aver specificato un ID paper corretto.");
+                }
+                if (response.status === 405) {
+                    throw new Error("Metodo non permesso. Verifica che la richiesta sia GET.");
+                }
+                throw new Error("Errore durante la richiesta.");
+            }
+
+            const data = await response.json();
+            console.log("recensioni");
+
+            paperReviews = data.reviews.map((review: any) => ({
+                id:review.id,
+                name: review.user.first_name,
+                surname: review.user.last_name,
+                evaluation: review.score,
+                confidence: review.confidence_level,
+                comment: review.comment_text,
+                reviewItems: review.reviewItems,
+                comments: review.comments
             }));
 
             console.log("Recensioni caricate con successo:", data);
@@ -432,65 +487,76 @@
             </div>
             {:else if $paper?.role.includes(Role.Reviewer)}
                 {#if !been_reviewed}
-                <div class="divider">Reviewer Evaluation</div>
-                <div class="flex flex-col items-center space-y-4 mt-4">
-                    <!-- Label -->
-                    <label for="score" class="font-semibold">Score (0-5):</label>
+                    <div class="flex flex-col items-center space-y-4 mt-4">
+                        <div class="divider">Overall Evaluation</div>
+                        <!-- Label -->
+                        <label for="score" class="font-semibold">Overall score (0-5):</label>
 
-                    <!-- Barra di selezione -->
-                    <input
-                    type="range"
-                    id="score"
-                    min="0"
-                    max="5"
-                    step="1"
-                    class="range range-primary w-64"
-                    bind:value={evaluation}
-                    />
+                        <!-- Visualizzazione del punteggio selezionato -->
+                        <p class="font-bold">Selected Score: {score}</p>
 
-                    <!-- Visualizzazione del punteggio selezionato -->
-                    <p class="text-lg font-bold">Selected Score: {evaluation}</p>
+                        <!-- Barra di selezione -->
+                        <input
+                        type="range"
+                        id="score"
+                        min="0"
+                        max="5"
+                        step="1"
+                        class="range range-primary w-64"
+                        bind:value={score}
+                        />
 
-                    <!-- Label -->
-                    <label for="confidence" class="font-semibold">Score (0-5):</label>
+                        
 
-                    <!-- Barra di selezione -->
-                    <input
-                    type="range"
-                    id="confidence"
-                    min="0"
-                    max="5"
-                    step="1"
-                    class="range range-primary w-64"
-                    bind:value={confidence}
-                    />
+                        <!-- Label -->
+                        <label for="confidence" class="font-semibold">Reviewer Confidence (0-5):</label>
 
-                    <!-- Visualizzazione del punteggio selezionato -->
-                    <p class="text-lg font-bold">Selected Confidence level: {confidence}</p>
+                        <!-- Visualizzazione del punteggio selezionato -->
+                        <p class="font-bold">Selected Confidence level: {confidence}</p>
+                        
+                        <!-- Barra di selezione -->
+                        <input
+                        type="range"
+                        id="confidence"
+                        min="0"
+                        max="5"
+                        step="1"
+                        class="range range-primary w-64"
+                        bind:value={confidence}
+                        />
 
-                    <!-- Recensione scritta -->
-                    <div class="form-control w-full max-w-md">
-                        <label class="label" for="reviewText">
-                            <span class="label-text font-semibold">Write your review</span>
-                        </label>
-                        <textarea
-                            id="reviewText"
-                            class="textarea textarea-bordered h-24"
-                            placeholder="Enter your review here"
-                            bind:value={reviewText}>
-                        </textarea>
+
+                        <!-- Recensione scritta -->
+                        <div class="form-control w-full max-w-md">
+                            <label class="label" for="reviewText">
+                                <span class="label-text font-semibold">Write your review</span>
+                            </label>
+                            <textarea
+                                id="reviewText"
+                                class="textarea textarea-bordered h-24"
+                                placeholder="Enter your review here"
+                                bind:value={reviewText}>
+                            </textarea>
+                        </div>
+                        {#each $conference?.reviewTemplate || [] as reviewTemplateItem} 
+                            <ReviewItem templateItem = {reviewTemplateItem} />
+                        {/each}
+                        
                     </div>
 
                     <!-- Pulsante di conferma -->
-                    <button
-                    class="btn btn-outline btn-primary"
-                    on:click={() => { evaluation = evaluation; confidence = confidence; showModal = true; }}>
-                    Submit Score
-                    </button>
-                </div>
+                    <div class="flex flex-col items-center space-y-4 mt-4">
+                        <button
+                        class="btn btn-outline btn-primary"
+                        on:click={() => { showModal = true; }}>
+                        Submit Score
+                        </button>
+                    </div>                
+
                 {:else}
-                <div class="alert alert-warning">
+                <div class="alert alert-warning mb-8">
                     <span>You have already reviewed this paper</span>
+
                 </div>
                 {/if}
             {/if}
@@ -503,13 +569,13 @@
                     <div class="modal-box">
                         <h3 class="font-bold text-lg">Confirm Evaluation</h3>
                         <p class="py-4">
-                            Are you sure you want to evaluate this paper as <strong>{evaluation}</strong>?
+                            Are you sure you want to evaluate this paper with an overall score of <strong>{score}</strong>?
                         </p>
                         <div class="modal-action">
                             {#if $paper?.role.includes(Role.Admin)}
                                 <button class="btn btn-success" on:click={() => evaluation && submitEvaluationAdmin(evaluation)}>Confirm Evaluation</button>
                             {:else if $paper?.role.includes(Role.Reviewer)}
-                                <button class="btn btn-success" on:click={() => evaluation && confidence && submitEvaluationReviewer(evaluation, confidence)}>Confirm Review</button>
+                                <button class="btn btn-success" on:click={() => score && confidence && submitEvaluationReviewer(score, confidence)}>Confirm Review</button>
                             {/if}
                             <button class="btn btn-outline" on:click={() => { showModal = false; }}>Cancel</button>
                         </div>
@@ -518,7 +584,7 @@
             {/if}
 
             {#if $paper?.role.includes(Role.Admin)}
-                <div class="divider">Revisori</div>
+                <div class="divider">Reviewer</div>
             
                 <div class="overflow-x-auto">
                     <table class="table w-full">
@@ -562,7 +628,7 @@
                             class="input input-bordered flex-1"
                         />
                         <button class="btn btn-secondary" on:click={addReviewer}>
-                            Aggiungi
+                            Add
                         </button>
                     </div>
                 </div>
@@ -580,10 +646,10 @@
                                 {review.name} {review.surname}
                             </div>
                             <div class="badge badge-primary badge-outline">
-                                Valutazione: {review.evaluation}/5
+                                Confidence: {review.confidence}/5
                             </div>
                             <div class="badge badge-primary badge-outline">
-                                Confidence: {review.confidence}/5
+                                Overall score: {review.evaluation}/5
                             </div>
                         </div>
         
@@ -591,19 +657,24 @@
                         <p class="mt-4 text-base text-gray-700">
                             {review.comment}
                         </p>
+
+                        {#each review.reviewItems as reviewItem}
+                            <ReviewItem templateItem={reviewItem} editable = {false}/>
+                        {/each}
+                        {#if $paper?.role.includes(Role.Reviewer) || $paper?.role.includes(Role.Admin)}
+                            <CommentSection comments={review.comments} review_id={review.id}/>
+                        {/if}
                     </div>
                 </div>
         
                 <!-- Separatore tra recensioni -->
                 {#if index < paperReviews.length - 1}
-                    <div class="divider">Fine recensione</div>
+                    <div class="divider"></div>
                 {/if}
             {/each}
         </div>
 
-
-            
-        </div>
+    </div>
 
     <style>
         .divider {
