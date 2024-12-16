@@ -4,8 +4,9 @@
   import { clearConference } from '$stores/conferenceStore';
   
   let navItems = [
-      { label: 'Conference', link: '/conference', visible: true },
-      { label: 'Reviews', link: '/reviews', visible: true },
+      { label: 'My Conferences', link: '/conference', visible: true },
+     // { label: 'Reviews', link: '/reviews', visible: true },
+      { label: 'Notifications', link: '/notifications', visible: true },
       { label: 'Submissions', link: '/submissions', visible: false}
     ];
 

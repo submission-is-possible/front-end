@@ -26,11 +26,11 @@
       <h1 class="text-2xl font-bold mb-4">Conference Paper Title</h1>
       
       <p class="mb-4">Authors: Alice Johnson, Bob Martinez</p>
-  
+      <!---
       <button class="btn btn-primary mb-4" on:click={() => alert('Downloading paper...')}>
         Download Paper
       </button>
-  
+      -->
       <h2 class="text-xl font-semibold mb-2">Reviewers</h2>
       <ul class="list-disc ml-6 mb-4">
         {#each reviewers as { id, name }}
@@ -40,7 +40,7 @@
   
       <div class="form-control mb-4">
         <label class="label">
-          <span class="label-text">Add New Reviewer</span>
+          <span class="label-text">Select Reviewer</span>
         </label>
         <input
           type="text"

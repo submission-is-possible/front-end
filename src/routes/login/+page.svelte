@@ -25,11 +25,13 @@
               headers: {
                   'Content-Type': 'application/json',
               },
+              credentials:'include',
               body: JSON.stringify({
                   email: form.email,
                   password: form.password
               })
           });
+          
           debugger;
           const data = await response.json();
           console.log("data: " + data);
@@ -39,7 +41,7 @@
             return;
           }
 
-          setUser({email: '', id: data.user_id, isLoggedin : true});
+          setUser({email: '', id: data.user_id, isLoggedin : true, first_name: '', last_name:''});
           goto('/');
 
       } catch (error) {

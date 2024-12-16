@@ -36,6 +36,8 @@
       totalPages = data.total_pages;
       totalConferences = data.total_conferences;
 
+      console.log('Conferenze:', conferences);
+
     } catch (error) {
       console.error('Errore:', error);
     }
@@ -100,7 +102,9 @@
           <th>Description</th>
           <th>Roles</th>
           <th>Created At</th>
+          <th>Paper Deadline</th>
           <th>Deadline</th>
+          <th>Blinding</th>
         </tr>
       </thead>
       <tbody>
@@ -114,7 +118,17 @@
               {/each}
             </td>
             <td>{formatDate(conference.created_at)}</td>
+            <td>{formatDate(conference.papers_deadline)}</td>
             <td>{formatDate(conference.deadline)}</td>
+            <td>
+              {#if conference.status == "single_blind"}
+                <span class="badge badge-secondary rounded-md">Single Blind</span>
+              {:else if conference.status == "double_blind"}
+                <span class="badge badge-secondary rounded-md">Double Blind</span>
+              {:else}
+                <span class="badge badge-secondary rounded-md">None</span>
+              {/if}
+            </td>
           </tr>
         {/each}
       </tbody>

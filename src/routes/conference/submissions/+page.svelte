@@ -36,7 +36,7 @@
   }
   
   async function openPaperOnLinkClicked(paper: Paper) {
-    goto(`/conference/submissions/detail`); 
+    goto(`/conference/submissions/${paper.id}`); 
   }
   
   function goToPage(newPage: number) {

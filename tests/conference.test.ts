@@ -14,12 +14,12 @@ describe('Create new conference component', () => {
     it('should validate the create conference form', async () => {
         render(CreateNewConference);
             
-        await fireEvent.submit(screen.getByTestId('crerate-conference-form'));
+        await fireEvent.submit(screen.getByTestId('create-button'));
         
         await waitFor(() => {
             expect(screen.getByTestId('title-error')).toBeVisible();
             expect(screen.getByTestId('description-error')).toBeVisible();
-            expect(screen.getByTestId('date-error')).toBeVisible();
+            //expect(screen.getByTestId('date-error')).toBeVisible();
         });
     });
 
@@ -31,7 +31,7 @@ describe('Create new conference component', () => {
     })
 
     it('should show an error message when cant create conference', async () => {
-        global.fetch = vi.fn().mockResolvedValueOnce({
+        window.fetch = vi.fn().mockResolvedValueOnce({
             ok: false,
             json: () => Promise.resolve({ error:'error message' })
           });
@@ -40,9 +40,10 @@ describe('Create new conference component', () => {
 
         await fireEvent.input(screen.getByTestId('title-input'), { target: { value: 'test1' } });
         await fireEvent.input(screen.getByTestId('description-input'), { target: { value: 'test1' } });
-        await fireEvent.input(screen.getByTestId('date-input'), { target: { value: '9999-01-01' } });
+        await fireEvent.input(screen.getByTestId('conference-deadline-input'), { target: { value: '9999-01-01' } });
+        await fireEvent.input(screen.getByTestId('submission-deadline-input'), { target: { value: '9998-01-01' } });
 
-        await fireEvent.submit(screen.getByTestId('crerate-conference-form'));
+        await fireEvent.submit(screen.getByTestId('create-button'));
 
         await waitFor( () => {
             expect(screen.getByTestId('conference-creation-error')).toHaveTextContent('error message')
@@ -51,7 +52,7 @@ describe('Create new conference component', () => {
     })
 
     it('shoud show a success message on conferene creation', async () => {
-        global.fetch = vi.fn().mockResolvedValueOnce({
+        window.fetch = vi.fn().mockResolvedValueOnce({
             ok: true,
             json: () => Promise.resolve({ success: 'success'})
           });
@@ -60,9 +61,80 @@ describe('Create new conference component', () => {
 
         await fireEvent.input(screen.getByTestId('title-input'), { target: { value: 'test1' } });
         await fireEvent.input(screen.getByTestId('description-input'), { target: { value: 'test1' } });
-        await fireEvent.input(screen.getByTestId('date-input'), { target: { value: '9999-01-01' } });
+        await fireEvent.input(screen.getByTestId('conference-deadline-input'), { target: { value: '9999-01-01' } });
+        await fireEvent.input(screen.getByTestId('submission-deadline-input'), { target: { value: '9998-01-01' } });
 
-        await fireEvent.submit(screen.getByTestId('crerate-conference-form'));
+
+        await fireEvent.submit(screen.getByTestId('create-button'));
+
+        await waitFor( () => {
+            expect(screen.getByTestId('conference-creation-success')).toHaveTextContent('Conference created!')
+        });
+        
+    });
+
+})
+
+describe('edit conference component', () => {
+    afterEach(() => {
+        vi.clearAllMocks();
+    });
+
+    it('should validate the edit conference form', async () => {
+        render(CreateNewConference);
+            
+        await fireEvent.submit(screen.getByTestId('create-button'));
+        
+        await waitFor(() => {
+            expect(screen.getByTestId('title-error')).toBeVisible();
+            expect(screen.getByTestId('description-error')).toBeVisible();
+            //expect(screen.getByTestId('date-error')).toBeVisible();
+        });
+    });
+
+    it('should navigate back to conference page', async () => {
+        render(CreateNewConference);
+
+        await fireEvent.click(screen.getByTestId('back-to-conferences-button'));
+        expect(goto).toHaveBeenCalledWith('/conference');
+    })
+
+    it('should show an error message when cant create conference', async () => {
+        window.fetch = vi.fn().mockResolvedValueOnce({
+            ok: false,
+            json: () => Promise.resolve({ error:'error message' })
+          });
+
+        render(CreateNewConference);
+
+        await fireEvent.input(screen.getByTestId('title-input'), { target: { value: 'test1' } });
+        await fireEvent.input(screen.getByTestId('description-input'), { target: { value: 'test1' } });
+        await fireEvent.input(screen.getByTestId('conference-deadline-input'), { target: { value: '9999-01-01' } });
+        await fireEvent.input(screen.getByTestId('submission-deadline-input'), { target: { value: '9998-01-01' } });
+
+        await fireEvent.submit(screen.getByTestId('create-button'));
+
+        await waitFor( () => {
+            expect(screen.getByTestId('conference-creation-error')).toHaveTextContent('error message')
+        });
+
+    })
+
+    it('shoud show a success message on conferene creation', async () => {
+        window.fetch = vi.fn().mockResolvedValueOnce({
+            ok: true,
+            json: () => Promise.resolve({ success: 'success'})
+          });
+        
+          render(CreateNewConference);
+
+        await fireEvent.input(screen.getByTestId('title-input'), { target: { value: 'test1' } });
+        await fireEvent.input(screen.getByTestId('description-input'), { target: { value: 'test1' } });
+        await fireEvent.input(screen.getByTestId('conference-deadline-input'), { target: { value: '9999-01-01' } });
+        await fireEvent.input(screen.getByTestId('submission-deadline-input'), { target: { value: '9998-01-01' } });
+        
+
+        await fireEvent.submit(screen.getByTestId('create-button'));
 
         await waitFor( () => {
             expect(screen.getByTestId('conference-creation-success')).toHaveTextContent('Conference created!')

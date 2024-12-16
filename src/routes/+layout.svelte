@@ -9,7 +9,6 @@
 <div class="min-h-screen flex flex-col justify-between">
   <div class="flex flex-col flex-grow"> <!-- Added wrapper div -->
     <Navbar />
-    <Toolbar />
     <main class="flex flex-grow">
       <div class="w-1/5 p-4"></div>
       <div class="w-3/5 p-4">

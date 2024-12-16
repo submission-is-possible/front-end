@@ -38,7 +38,7 @@ describe('Login component', () => {
 
     await fireEvent.submit(screen.getByTestId('login-form'));
     await waitFor(() => expect(goto).toHaveBeenCalledWith('/'));
-    expect(setUser).toHaveBeenCalledWith({ email: '', id: 1, isLoggedin : true });
+    expect(setUser).toHaveBeenCalledWith({ email: "", id: 1, isLoggedin : true ,first_name: "",last_name: "",});
   });
 
 
