@@ -10,7 +10,7 @@
     import BlindingSelector from '$lib/components/BlindingSelector.svelte';
     import ReviewCustomization from '$lib/components/ReviewCustomization.svelte';
     import ReviewItemList from '$lib/components/ReviewItem.svelte';
-    import { ReviewTemplateItem } from '$lib/models/reviewItem';
+    import { ReviewTemplateItem } from '$lib/models/reviewItemData';
     import { writable } from 'svelte/store';
   
     //let conference: Conference | null = null;

@@ -1,5 +1,5 @@
 export class Comment{
-    user:User;
+    user:User|null;
     review_id:number;
     comment_text:string;
     created_at: Date;

@@ -4,9 +4,9 @@
     import {user} from '$stores/userStore'
     import { comment } from 'postcss';
 
-    export let comments: Comments[];
+    export let comments: Comment[];
     export let review_id : number;
-    let empty_comment: Comment = {user:$user,review_id:review_id,comment_text:'',created_at: Date()};
+    let empty_comment: Comment = {user:$user,review_id:review_id,comment_text:'',created_at: new Date()};
     let new_comment: Comment = { ...empty_comment };
 
     async function handleSend() {

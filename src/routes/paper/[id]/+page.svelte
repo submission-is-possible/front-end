@@ -13,8 +13,9 @@
   export let data: PageData;
   import { writable } from 'svelte/store';
   import ReviewItem from '$lib/components/ReviewItem.svelte';
-  import { ReviewTemplateItem } from '$lib/models/reviewItem';
+  import { ReviewTemplateItem } from '$lib/models/reviewItemData';
     import CommentSection from '$lib/components/CommentSection.svelte';
+    import { Comment } from '$lib/models/comments';
 
 
     let isLoading = true;
@@ -336,8 +337,9 @@
         confidence: number;
         comment: string;
         comments: Comment[];
-        reviewItems: ReviewTemplateItem[]}[] = []; // Lista dei revisori
-        
+        reviewItems: ReviewTemplateItem[]
+    }[] = []; // Lista dei revisori
+    
     export async function fetchPaperReviews() {
         try {
             const response = await fetch(`http://localhost:8000/reviews/get_paper_reviews/?paper_id=${$paper?.id}&page=${1}&page_size=${50}`, {

@@ -22,12 +22,14 @@ const mockConference : Conference = {
   papers_deadline: new Date,
   roles: [Role.Admin],
   user_id: 1,
-  status: 'none'
+  status: 'none',
+  reviewTemplate: []
 };
 
 const mockUser = {
   id: 1,
-  name: 'Test User',
+  first_name: 'Test',
+  last_name: 'User',
   email: 'test@example.com',
   isLoggedin: true
 };

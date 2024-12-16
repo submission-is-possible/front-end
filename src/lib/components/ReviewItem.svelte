@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type {ReviewTemplateItem} from '$lib/models/reviewItem';
+    import type {ReviewTemplateItem} from '$lib/models/reviewItemData';
 
     export let templateItem: ReviewTemplateItem;
     export let editable : boolean = true

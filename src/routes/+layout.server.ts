@@ -5,7 +5,6 @@ import { setUser } from '$stores/userStore';
 
 // Mock in-memory user session storage (replace with a real database lookup)
 const sessionStore = new Map<string, User >();
-sessionStore.set('secureRandomTokenForUser', { id: 1, email: 'User', isLoggedin: true });
 
 export const load: LayoutServerLoad = async ({ cookies }) => {
     /*

@@ -1,12 +1,12 @@
 <script lang="ts">
   import CreateItemButton from "./CreateItemButton.svelte";
-  import type { ReviewTemplateItem } from "$lib/models/reviewItem";
+  import { ReviewTemplateItem } from "$lib/models/reviewItemData";
   export let onSave:(template:ReviewTemplateItem[]) => void;
   export let toggleModal: ()=>void ;
   export let reviewTemplate : ReviewTemplateItem[] = [];
 
   function addReviewTemplateItem(){
-    reviewTemplate=[...reviewTemplate , {label:'', description:'', has_comment: true, has_score: true, comment: '', score: 0}];
+    reviewTemplate=[...reviewTemplate , new ReviewTemplateItem()];
   }
 
   function removeRow(index:number) {
